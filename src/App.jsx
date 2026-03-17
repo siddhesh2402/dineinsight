@@ -101,24 +101,6 @@ saveCart(updatedCart)
 
 }
 
-const checkout = () => {
-
-if(cart.length === 0) return
-
-const newOrders = [...orders, ...cart]
-
-setOrders(newOrders)
-
-setCart([])
-
-if(userEmail){
-localStorage.setItem("cart_"+userEmail, JSON.stringify([]))
-}
-
-alert("Order placed successfully!")
-
-}
-
 /* CHECKOUT */
 
 const checkout = () => {
