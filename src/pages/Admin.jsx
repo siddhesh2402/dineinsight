@@ -14,6 +14,7 @@ function Admin({ foods = [], setFoods, orders = [] }) {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [editingId, setEditingId] = useState(null)
 
   const imagePreview =
     form.image && form.image.trim() !== "" ? form.image : hero
@@ -21,7 +22,6 @@ function Admin({ foods = [], setFoods, orders = [] }) {
   const fetchFoods = async () => {
     try {
       setError("")
-
       const res = await fetch(`${API_URL}/api/foods`)
 
       if (!res.ok) {
@@ -51,7 +51,18 @@ function Admin({ foods = [], setFoods, orders = [] }) {
     }))
   }
 
-  const addFood = async () => {
+  const resetForm = () => {
+    setForm({
+      name: "",
+      description: "",
+      category: "Pizza",
+      price: "",
+      image: "",
+    })
+    setEditingId(null)
+  }
+
+  const addOrUpdateFood = async () => {
     if (!form.name.trim() || !form.category.trim() || !form.price) {
       setError("Name, category and price are required")
       return
@@ -69,8 +80,14 @@ function Admin({ foods = [], setFoods, orders = [] }) {
         image: form.image.trim(),
       }
 
-      const res = await fetch(`${API_URL}/api/foods`, {
-        method: "POST",
+      const url = editingId
+        ? `${API_URL}/api/foods/${editingId}`
+        : `${API_URL}/api/foods`
+
+      const method = editingId ? "PUT" : "POST"
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -78,21 +95,14 @@ function Admin({ foods = [], setFoods, orders = [] }) {
       })
 
       if (!res.ok) {
-        throw new Error(`Failed to add food: ${res.status}`)
+        throw new Error(`Failed to save dish: ${res.status}`)
       }
 
-      setForm({
-        name: "",
-        description: "",
-        category: "Pizza",
-        price: "",
-        image: "",
-      })
-
+      resetForm()
       await fetchFoods()
     } catch (err) {
-      console.error("Add food error:", err)
-      setError("Could not add dish")
+      console.error("Save food error:", err)
+      setError("Could not save dish")
     } finally {
       setLoading(false)
     }
@@ -115,6 +125,18 @@ function Admin({ foods = [], setFoods, orders = [] }) {
       console.error("Delete food error:", err)
       setError("Could not delete dish")
     }
+  }
+
+  const startEdit = (food) => {
+    setForm({
+      name: food.name || "",
+      description: food.description || "",
+      category: food.category || "Pizza",
+      price: food.price || "",
+      image: food.image || "",
+    })
+    setEditingId(food._id)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const totalOrders = orders.length
@@ -181,12 +203,12 @@ function Admin({ foods = [], setFoods, orders = [] }) {
           marginBottom: "30px",
         }}
       >
-        <h2 style={{ marginTop: 0 }}>Add New Dish</h2>
+        <h2 style={{ marginTop: 0 }}>
+          {editingId ? "Edit Dish" : "Add New Dish"}
+        </h2>
 
         {error && (
-          <p style={{ color: "red", marginBottom: "15px" }}>
-            {error}
-          </p>
+          <p style={{ color: "red", marginBottom: "15px" }}>{error}</p>
         )}
 
         <div
@@ -264,7 +286,7 @@ function Admin({ foods = [], setFoods, orders = [] }) {
           </select>
 
           <button
-            onClick={addFood}
+            onClick={addOrUpdateFood}
             disabled={loading}
             style={{
               background: "#1B4332",
@@ -275,8 +297,24 @@ function Admin({ foods = [], setFoods, orders = [] }) {
               cursor: "pointer",
             }}
           >
-            {loading ? "Adding..." : "Add Dish"}
+            {loading ? "Saving..." : editingId ? "Update Dish" : "Add Dish"}
           </button>
+
+          {editingId && (
+            <button
+              onClick={resetForm}
+              style={{
+                background: "#999",
+                color: "white",
+                border: "none",
+                padding: "12px 18px",
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          )}
         </div>
 
         <div style={{ marginTop: "20px", maxWidth: "320px" }}>
@@ -349,19 +387,35 @@ function Admin({ foods = [], setFoods, orders = [] }) {
                       <strong>Price:</strong> ${food.price}
                     </p>
 
-                    <button
-                      onClick={() => deleteFood(food._id)}
-                      style={{
-                        background: "#d62828",
-                        color: "white",
-                        border: "none",
-                        padding: "10px 14px",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Delete
-                    </button>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <button
+                        onClick={() => startEdit(food)}
+                        style={{
+                          background: "#1B4332",
+                          color: "white",
+                          border: "none",
+                          padding: "10px 14px",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => deleteFood(food._id)}
+                        style={{
+                          background: "#d62828",
+                          color: "white",
+                          border: "none",
+                          padding: "10px 14px",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               )
