@@ -3,6 +3,8 @@ import hero from "../assets/hero-food.jpg"
 
 function Admin({ foods = [], setFoods, orders = [] }) {
   const API_URL = import.meta.env.VITE_API_URL
+  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
   const [form, setForm] = useState({
     name: "",
@@ -62,9 +64,49 @@ function Admin({ foods = [], setFoods, orders = [] }) {
     setEditingId(null)
   }
 
+  const openUploadWidget = () => {
+    if (!window.cloudinary) {
+      setError("Cloudinary widget not loaded")
+      return
+    }
+
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: CLOUD_NAME,
+        uploadPreset: UPLOAD_PRESET,
+        multiple: false,
+        cropping: false,
+        folder: "dineinsight",
+        sources: ["local", "camera", "url"],
+        resourceType: "image",
+      },
+      (err, result) => {
+        if (err) {
+          console.error("Cloudinary error:", err)
+          setError("Image upload failed")
+          return
+        }
+
+        if (result && result.event === "success") {
+          setForm((prev) => ({
+            ...prev,
+            image: result.info.secure_url,
+          }))
+        }
+      }
+    )
+
+    widget.open()
+  }
+
   const addOrUpdateFood = async () => {
     if (!form.name.trim() || !form.category.trim() || !form.price) {
       setError("Name, category and price are required")
+      return
+    }
+
+    if (!form.image.trim()) {
+      setError("Please upload an image")
       return
     }
 
@@ -256,18 +298,6 @@ function Admin({ foods = [], setFoods, orders = [] }) {
             }}
           />
 
-          <input
-            name="image"
-            placeholder="Image URL"
-            value={form.image}
-            onChange={handleChange}
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-            }}
-          />
-
           <select
             name="category"
             value={form.category}
@@ -284,6 +314,21 @@ function Admin({ foods = [], setFoods, orders = [] }) {
             <option>Dessert</option>
             <option>Main</option>
           </select>
+
+          <button
+            onClick={openUploadWidget}
+            type="button"
+            style={{
+              background: "#1976d2",
+              color: "white",
+              border: "none",
+              padding: "12px 18px",
+              borderRadius: "8px",
+              cursor: "pointer",
+            }}
+          >
+            Upload Image
+          </button>
 
           <button
             onClick={addOrUpdateFood}
@@ -303,6 +348,7 @@ function Admin({ foods = [], setFoods, orders = [] }) {
           {editingId && (
             <button
               onClick={resetForm}
+              type="button"
               style={{
                 background: "#999",
                 color: "white",
