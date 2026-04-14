@@ -1,10 +1,25 @@
 import { useEffect, useState } from "react"
 import hero from "../assets/hero-food.jpg"
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+} from "recharts"
 
-function Admin({ foods = [], setFoods, orders = [] }) {
+function Admin({ foods = [], setFoods }) {
   const API_URL = import.meta.env.VITE_API_URL
   const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
   const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+
+  const role = localStorage.getItem("role")
 
   const [form, setForm] = useState({
     name: "",
@@ -17,21 +32,16 @@ function Admin({ foods = [], setFoods, orders = [] }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [editingId, setEditingId] = useState(null)
+  const [allOrders, setAllOrders] = useState([])
 
   const imagePreview =
     form.image && form.image.trim() !== "" ? form.image : hero
-
-  const totalOrders = orders.length
-  const totalRevenue = orders.reduce(
-    (sum, order) => sum + (order.total || 0),
-    0
-  )
 
   const fetchFoods = async () => {
     try {
       setError("")
       const res = await fetch(`${API_URL}/api/foods`)
-      const data = await res.json()
+      const data = await res.json().catch(() => [])
 
       if (!res.ok) {
         throw new Error(data.message || `Failed to fetch foods: ${res.status}`)
@@ -45,9 +55,25 @@ function Admin({ foods = [], setFoods, orders = [] }) {
     }
   }
 
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/orders`)
+      const data = await res.json().catch(() => [])
+
+      if (!res.ok) {
+        throw new Error(data.message || `Failed to fetch orders: ${res.status}`)
+      }
+
+      setAllOrders(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error("Fetch orders error:", err)
+    }
+  }
+
   useEffect(() => {
     if (API_URL) {
       fetchFoods()
+      fetchOrders()
     }
   }, [API_URL])
 
@@ -194,6 +220,34 @@ function Admin({ foods = [], setFoods, orders = [] }) {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
+  const totalOrders = allOrders.length
+  const totalRevenue = allOrders.reduce(
+    (sum, order) => sum + (order.totalCost || 0),
+    0
+  )
+
+  const categoryCount = {}
+  foods.forEach((food) => {
+    categoryCount[food.category] = (categoryCount[food.category] || 0) + 1
+  })
+
+  const pieData = Object.keys(categoryCount).map((cat) => ({
+    name: cat,
+    value: categoryCount[cat],
+  }))
+
+  const statusCount = {}
+  allOrders.forEach((order) => {
+    statusCount[order.status] = (statusCount[order.status] || 0) + 1
+  })
+
+  const barData = Object.keys(statusCount).map((status) => ({
+    status,
+    count: statusCount[status],
+  }))
+
+  const COLORS = ["#1B4332", "#1976d2", "#f59e0b", "#d62828", "#7c3aed"]
+
   const cardStyle = {
     background: "white",
     padding: "20px",
@@ -251,6 +305,33 @@ function Admin({ foods = [], setFoods, orders = [] }) {
     fontWeight: "600",
   }
 
+  if (role !== "admin") {
+    return (
+      <div
+        style={{
+          maxWidth: "900px",
+          margin: "40px auto",
+          padding: "30px 20px",
+        }}
+      >
+        <div
+          style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "16px",
+            boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
+            textAlign: "center",
+          }}
+        >
+          <h2 style={{ marginTop: 0, color: "#111827" }}>Access Denied</h2>
+          <p style={{ color: "#6b7280", marginBottom: 0 }}>
+            Only admin users can access this page.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       style={{
@@ -276,7 +357,7 @@ function Admin({ foods = [], setFoods, orders = [] }) {
             fontSize: "15px",
           }}
         >
-          Manage dishes, upload images, update prices, and keep your menu live.
+          Manage dishes, track real-time orders, revenue, and menu analytics.
         </p>
       </div>
 
@@ -309,6 +390,53 @@ function Admin({ foods = [], setFoods, orders = [] }) {
           <h2 style={{ margin: "10px 0 0", color: "#111827" }}>
             ${totalRevenue}
           </h2>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))",
+          gap: "20px",
+          marginBottom: "30px",
+        }}
+      >
+        <div style={cardStyle}>
+          <h3 style={{ marginTop: 0, color: "#111827" }}>Menu Categories</h3>
+          <div style={{ width: "100%", height: "280px" }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={90}
+                  label
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div style={cardStyle}>
+          <h3 style={{ marginTop: 0, color: "#111827" }}>Orders by Status</h3>
+          <div style={{ width: "100%", height: "280px" }}>
+            <ResponsiveContainer>
+              <BarChart data={barData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="status" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#1B4332" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
