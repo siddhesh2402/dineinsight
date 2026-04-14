@@ -6,6 +6,8 @@ import Cart from "./pages/Cart"
 import Admin from "./pages/Admin"
 import hero from "./assets/hero-food.jpg"
 import LoginPopup from "./components/LoginPopup"
+import OrderHistory from "./pages/OrderHistory"
+
 
 function App() {
   const API_URL = import.meta.env.VITE_API_URL
@@ -85,16 +87,33 @@ function App() {
     saveCart(updatedCart)
   }
 
-  const checkout = () => {
-    if (cart.length === 0) return
+  const checkout = async (orderDetails) => {
+  if (cart.length === 0) return
 
-    const newOrder = {
-      id: Date.now(),
+  try {
+    const payload = {
+      customerName: orderDetails.customerName || "Guest User",
+      email: userEmail || "",
+      phone: orderDetails.phone,
+      address: orderDetails.address,
       items: cart,
-      total: cart.reduce((sum, item) => sum + item.price * item.qty, 0),
     }
 
-    setOrders((prev) => [...prev, newOrder])
+    const res = await fetch(`${API_URL}/api/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const data = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to place order")
+    }
+
+    setOrders((prev) => [...prev, data])
     setCart([])
 
     if (userEmail) {
@@ -102,7 +121,11 @@ function App() {
     }
 
     alert("Order placed successfully!")
+  } catch (err) {
+    console.error("Checkout error:", err)
+    alert(err.message || "Could not place order")
   }
+}
 
   const filteredFoods = foods.filter((food) => {
     const categoryMatch = category === "All" || food.category === category
@@ -264,6 +287,12 @@ function App() {
             />
           }
         />
+
+<Route
+path="/orders"
+element={<OrderHistory />}
+/>
+
 
         <Route
           path="/admin"

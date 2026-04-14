@@ -5,6 +5,7 @@ const mongoose = require("mongoose")
 
 const authRoutes = require("./routes/authRoutes")
 const foodRoutes = require("./routes/foodRoutes")
+const orderRoutes = require("./routes/orderRoutes")
 
 dotenv.config()
 
@@ -22,6 +23,7 @@ app.use(express.json())
 
 app.use("/api/auth", authRoutes)
 app.use("/api/foods", foodRoutes)
+app.use("/api/order", orderRoutes)
 
 app.get("/", (req, res) => {
   res.send("DineInsight backend is running")
