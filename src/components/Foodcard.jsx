@@ -1,92 +1,134 @@
 import hero from "../assets/hero-food.jpg"
 
-function FoodCard({ food, cart, addToCart, removeFromCart }) {
-  const cartItem = cart.find((item) => item._id === food._id)
-  const qty = cartItem ? cartItem.qty : 0
-
-  const imageSrc =
+function FoodCard({ food, onAddToCart }) {
+  const imgSrc =
     food.image && food.image.trim() !== "" ? food.image : hero
 
   return (
     <div
       style={{
         background: "white",
-        borderRadius: "10px",
-        padding: "15px",
-        textAlign: "center",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        borderRadius: "18px",
+        overflow: "hidden",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+        border: "1px solid #f0f0f0",
+        transition: "all 0.25s ease",
+        cursor: "pointer",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-6px)"
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)"
       }}
     >
-      <img
-        src={imageSrc}
-        alt={food.name}
-        style={{
-          width: "100%",
-          height: "150px",
-          objectFit: "cover",
-          borderRadius: "8px",
-        }}
-      />
-
-      <h3>{food.name}</h3>
-
-      <div style={{ color: "#FFA41C", marginBottom: "6px" }}>
-        {"⭐".repeat(Math.floor(food.rating || 0))} {food.rating} ({food.reviews})
-      </div>
-
-      <p>${food.price}</p>
-
-      {qty === 0 ? (
-        <button
-          onClick={() => addToCart(food)}
+      {/* IMAGE */}
+      <div style={{ position: "relative" }}>
+        <img
+          src={imgSrc}
+          alt={food.name}
           style={{
+            width: "100%",
+            height: "200px",
+            objectFit: "cover",
+          }}
+        />
+
+        {/* Category badge */}
+        <span
+          style={{
+            position: "absolute",
+            top: "12px",
+            left: "12px",
             background: "#1B4332",
             color: "white",
-            border: "none",
-            padding: "8px 18px",
-            borderRadius: "20px",
-            cursor: "pointer",
+            padding: "6px 12px",
+            borderRadius: "999px",
+            fontSize: "12px",
+            fontWeight: "600",
           }}
         >
-          Add
-        </button>
-      ) : (
+          {food.category}
+        </span>
+      </div>
+
+      {/* CONTENT */}
+      <div style={{ padding: "16px" }}>
+        <h3
+          style={{
+            margin: "0 0 8px",
+            fontSize: "18px",
+            color: "#111827",
+          }}
+        >
+          {food.name}
+        </h3>
+
+        <p
+          style={{
+            margin: "0 0 12px",
+            color: "#6b7280",
+            fontSize: "14px",
+            minHeight: "40px",
+          }}
+        >
+          {food.description || "Delicious dish freshly prepared."}
+        </p>
+
+        {/* Price + Rating */}
         <div
           style={{
             display: "flex",
-            justifyContent: "center",
+            justifyContent: "space-between",
             alignItems: "center",
-            gap: "10px",
-            marginTop: "10px",
+            marginBottom: "12px",
           }}
         >
-          <button
-            onClick={() => removeFromCart(food._id)}
+          <span
             style={{
-              padding: "5px 12px",
-              borderRadius: "20px",
-              border: "1px solid #ccc",
-              cursor: "pointer",
+              fontSize: "18px",
+              fontWeight: "700",
+              color: "#111827",
             }}
           >
-            -
-          </button>
+            ${food.price}
+          </span>
 
-          <span>{qty}</span>
-
-          <button
-            onClick={() => addToCart(food)}
+          <span
             style={{
-              padding: "5px 12px",
-              borderRadius: "20px",
-              border: "1px solid #ccc",
-              cursor: "pointer",
+              fontSize: "13px",
+              color: "#f59e0b",
+              fontWeight: "600",
             }}
           >
-            +
-          </button>
+            ⭐ {food.rating || 4.5} ({food.reviews || 100})
+          </span>
         </div>
-      )}
+
+        {/* ADD BUTTON */}
+        <button
+          onClick={() => onAddToCart(food)}
+          style={{
+            width: "100%",
+            background: "#1B4332",
+            color: "white",
+            border: "none",
+            padding: "12px",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontWeight: "600",
+            transition: "0.2s",
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = "#16382a")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "#1B4332")
+          }
+        >
+          Add to Cart
+        </button>
+      </div>
     </div>
   )
 }

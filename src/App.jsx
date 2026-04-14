@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import Navbar from "./components/Navbar"
-import FoodCard from "./components/Foodcard"
+import FoodCard from "./components/Temp"
 import { Routes, Route } from "react-router-dom"
 import Cart from "./pages/Cart"
 import Admin from "./pages/Admin"
@@ -19,7 +19,6 @@ function App() {
 
   const userEmail = localStorage.getItem("userEmail")
 
-  /* LOAD FOODS FROM BACKEND */
   useEffect(() => {
     const fetchFoods = async () => {
       try {
@@ -42,7 +41,6 @@ function App() {
     }
   }, [API_URL])
 
-  /* LOAD CART WHEN USER LOGS IN */
   useEffect(() => {
     if (userEmail) {
       const savedCart =
@@ -53,19 +51,14 @@ function App() {
     }
   }, [userEmail])
 
-  /* SAVE CART */
   const saveCart = (updatedCart) => {
     setCart(updatedCart)
 
     if (userEmail) {
-      localStorage.setItem(
-        "cart_" + userEmail,
-        JSON.stringify(updatedCart)
-      )
+      localStorage.setItem("cart_" + userEmail, JSON.stringify(updatedCart))
     }
   }
 
-  /* ADD TO CART */
   const addToCart = (food) => {
     const existingItem = cart.find((item) => item._id === food._id)
 
@@ -73,9 +66,7 @@ function App() {
 
     if (existingItem) {
       updatedCart = cart.map((item) =>
-        item._id === food._id
-          ? { ...item, qty: item.qty + 1 }
-          : item
+        item._id === food._id ? { ...item, qty: item.qty + 1 } : item
       )
     } else {
       updatedCart = [...cart, { ...food, qty: 1 }]
@@ -84,34 +75,26 @@ function App() {
     saveCart(updatedCart)
   }
 
-  /* REMOVE FROM CART */
   const removeFromCart = (foodId) => {
     const updatedCart = cart
       .map((item) =>
-        item._id === foodId
-          ? { ...item, qty: item.qty - 1 }
-          : item
+        item._id === foodId ? { ...item, qty: item.qty - 1 } : item
       )
       .filter((item) => item.qty > 0)
 
     saveCart(updatedCart)
   }
 
-  /* CHECKOUT */
   const checkout = () => {
     if (cart.length === 0) return
 
     const newOrder = {
       id: Date.now(),
       items: cart,
-      total: cart.reduce(
-        (sum, item) => sum + item.price * item.qty,
-        0
-      ),
+      total: cart.reduce((sum, item) => sum + item.price * item.qty, 0),
     }
 
     setOrders((prev) => [...prev, newOrder])
-
     setCart([])
 
     if (userEmail) {
@@ -121,11 +104,8 @@ function App() {
     alert("Order placed successfully!")
   }
 
-  /* FILTER FOODS */
   const filteredFoods = foods.filter((food) => {
-    const categoryMatch =
-      category === "All" || food.category === category
-
+    const categoryMatch = category === "All" || food.category === category
     const searchMatch = food.name
       .toLowerCase()
       .includes(search.toLowerCase())
@@ -138,7 +118,7 @@ function App() {
       style={{
         background: "#f5f5f5",
         minHeight: "100vh",
-        fontFamily: "Arial",
+        fontFamily: "Arial, sans-serif",
       }}
     >
       <Navbar
@@ -156,9 +136,10 @@ function App() {
               <div
                 style={{
                   maxWidth: "1200px",
-                  margin: "40px auto",
-                  borderRadius: "16px",
+                  margin: "40px auto 24px",
+                  borderRadius: "20px",
                   overflow: "hidden",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
                 }}
               >
                 <img
@@ -166,16 +147,25 @@ function App() {
                   alt="Hero"
                   style={{
                     width: "100%",
-                    height: "300px",
+                    height: "320px",
                     objectFit: "cover",
+                    display: "block",
                   }}
                 />
               </div>
 
-              <div style={{ textAlign: "center" }}>
-                <h2>Explore Our Menu</h2>
+              <div style={{ textAlign: "center", padding: "0 20px" }}>
+                <h2
+                  style={{
+                    marginBottom: "8px",
+                    fontSize: "32px",
+                    color: "#111827",
+                  }}
+                >
+                  Explore Our Menu
+                </h2>
 
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "#6b7280", marginTop: 0 }}>
                   Choose from a variety of delicious dishes
                 </p>
               </div>
@@ -185,6 +175,7 @@ function App() {
                   display: "flex",
                   justifyContent: "center",
                   marginTop: "20px",
+                  padding: "0 20px",
                 }}
               >
                 <input
@@ -193,10 +184,14 @@ function App() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   style={{
-                    width: "350px",
-                    padding: "12px",
-                    borderRadius: "30px",
+                    width: "100%",
+                    maxWidth: "420px",
+                    padding: "14px 18px",
+                    borderRadius: "999px",
                     border: "1px solid #ddd",
+                    outline: "none",
+                    fontSize: "14px",
+                    boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
                   }}
                 />
               </div>
@@ -205,9 +200,10 @@ function App() {
                 style={{
                   display: "flex",
                   justifyContent: "center",
-                  gap: "15px",
-                  margin: "30px 0",
+                  gap: "12px",
+                  margin: "28px 0",
                   flexWrap: "wrap",
+                  padding: "0 20px",
                 }}
               >
                 {["All", "Pizza", "Burger", "Pasta", "Dessert", "Main"].map(
@@ -219,9 +215,14 @@ function App() {
                         background: category === cat ? "#1B4332" : "white",
                         color: category === cat ? "white" : "#333",
                         border: "1px solid #ddd",
-                        padding: "10px 20px",
-                        borderRadius: "30px",
+                        padding: "10px 18px",
+                        borderRadius: "999px",
                         cursor: "pointer",
+                        fontWeight: "600",
+                        boxShadow:
+                          category === cat
+                            ? "0 6px 16px rgba(27,67,50,0.25)"
+                            : "0 4px 12px rgba(0,0,0,0.04)",
                       }}
                     >
                       {cat}
@@ -233,20 +234,18 @@ function App() {
               <div
                 style={{
                   maxWidth: "1200px",
-                  margin: "auto",
+                  margin: "0 auto",
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
-                  gap: "30px",
-                  padding: "20px",
+                  gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
+                  gap: "24px",
+                  padding: "0 20px 40px",
                 }}
               >
                 {filteredFoods.map((food) => (
                   <FoodCard
                     key={food._id}
                     food={food}
-                    cart={cart}
-                    addToCart={addToCart}
-                    removeFromCart={removeFromCart}
+                    onAddToCart={addToCart}
                   />
                 ))}
               </div>
