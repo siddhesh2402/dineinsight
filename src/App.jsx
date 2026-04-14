@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import Navbar from "./components/Navbar"
-import FoodCard from "./components/Temp"
+import FoodCard from "./components/FoodCard"
 import { Routes, Route } from "react-router-dom"
 import Cart from "./pages/Cart"
 import Admin from "./pages/Admin"
