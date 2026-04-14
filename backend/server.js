@@ -23,7 +23,7 @@ app.use(express.json())
 
 app.use("/api/auth", authRoutes)
 app.use("/api/foods", foodRoutes)
-app.use("/api/order", orderRoutes)
+app.use("/api/orders", orderRoutes)
 
 app.get("/", (req, res) => {
   res.send("DineInsight backend is running")
