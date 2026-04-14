@@ -1,8 +1,11 @@
 import hero from "../assets/hero-food.jpg"
 
-function FoodCard({ food, onAddToCart }) {
+function FoodCard({ food, cart, addToCart, removeFromCart }) {
   const imgSrc =
     food.image && food.image.trim() !== "" ? food.image : hero
+
+  const cartItem = cart.find((item) => item._id === food._id)
+  const qty = cartItem ? cartItem.qty : 0
 
   return (
     <div
@@ -13,7 +16,6 @@ function FoodCard({ food, onAddToCart }) {
         boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
         border: "1px solid #f0f0f0",
         transition: "all 0.25s ease",
-        cursor: "pointer",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-6px)"
@@ -22,7 +24,6 @@ function FoodCard({ food, onAddToCart }) {
         e.currentTarget.style.transform = "translateY(0)"
       }}
     >
-      {/* IMAGE */}
       <div style={{ position: "relative" }}>
         <img
           src={imgSrc}
@@ -34,7 +35,6 @@ function FoodCard({ food, onAddToCart }) {
           }}
         />
 
-        {/* Category badge */}
         <span
           style={{
             position: "absolute",
@@ -52,7 +52,6 @@ function FoodCard({ food, onAddToCart }) {
         </span>
       </div>
 
-      {/* CONTENT */}
       <div style={{ padding: "16px" }}>
         <h3
           style={{
@@ -75,7 +74,6 @@ function FoodCard({ food, onAddToCart }) {
           {food.description || "Delicious dish freshly prepared."}
         </p>
 
-        {/* Price + Rating */}
         <div
           style={{
             display: "flex",
@@ -105,29 +103,85 @@ function FoodCard({ food, onAddToCart }) {
           </span>
         </div>
 
-        {/* ADD BUTTON */}
-        <button
-          onClick={() => onAddToCart(food)}
-          style={{
-            width: "100%",
-            background: "#1B4332",
-            color: "white",
-            border: "none",
-            padding: "12px",
-            borderRadius: "10px",
-            cursor: "pointer",
-            fontWeight: "600",
-            transition: "0.2s",
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = "#16382a")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "#1B4332")
-          }
-        >
-          Add to Cart
-        </button>
+        {qty === 0 ? (
+          <button
+            onClick={() => addToCart(food)}
+            style={{
+              width: "100%",
+              background: "#1B4332",
+              color: "white",
+              border: "none",
+              padding: "12px",
+              borderRadius: "10px",
+              cursor: "pointer",
+              fontWeight: "600",
+              transition: "0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#16382a"
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#1B4332"
+            }}
+          >
+            Add to Cart
+          </button>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "12px",
+              marginTop: "8px",
+            }}
+          >
+            <button
+              onClick={() => removeFromCart(food._id)}
+              style={{
+                width: "38px",
+                height: "38px",
+                borderRadius: "50%",
+                border: "none",
+                background: "#f3f4f6",
+                cursor: "pointer",
+                fontSize: "18px",
+                fontWeight: "700",
+              }}
+            >
+              -
+            </button>
+
+            <span
+              style={{
+                minWidth: "24px",
+                textAlign: "center",
+                fontWeight: "700",
+                fontSize: "16px",
+                color: "#111827",
+              }}
+            >
+              {qty}
+            </span>
+
+            <button
+              onClick={() => addToCart(food)}
+              style={{
+                width: "38px",
+                height: "38px",
+                borderRadius: "50%",
+                border: "none",
+                background: "#1B4332",
+                color: "white",
+                cursor: "pointer",
+                fontSize: "18px",
+                fontWeight: "700",
+              }}
+            >
+              +
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

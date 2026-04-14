@@ -269,6 +269,7 @@ function App() {
                     key={food._id}
                     food={food}
                     onAddToCart={addToCart}
+                    removeFromCart={removeFromCart}
                   />
                 ))}
               </div>
