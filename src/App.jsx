@@ -264,12 +264,19 @@ function App() {
                   padding: "0 20px 40px",
                 }}
               >
-                {filteredFoods.map((food) => (
-                  <FoodCard
-                    key={food._id}
-                    food={food}
-                    onAddToCart={addToCart}
-                    removeFromCart={removeFromCart}
+                {filteredFoods.length === 0 ? (
+  <p style={{ color: "#6b7280" }}>No dishes available.</p>
+) : (
+  {filteredFoods.length === 0 ? (
+  <p style={{ color: "#6b7280" }}>No dishes available.</p>
+) : (
+  filteredFoods.map((food) => (
+    <FoodCard
+      key={food._id}
+      food={food}
+      cart={cart}
+      addToCart={addToCart}
+      removeFromCart={removeFromCart}
                   />
                 ))}
               </div>

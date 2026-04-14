@@ -12,6 +12,8 @@ import {
   YAxis,
   CartesianGrid,
   Legend,
+  LineChart,
+  Line,
 } from "recharts"
 
 function Admin({ foods = [], setFoods }) {
@@ -236,17 +238,54 @@ function Admin({ foods = [], setFoods }) {
     value: categoryCount[cat],
   }))
 
+  const dishesBarData = Object.keys(categoryCount).map((cat) => ({
+    category: cat,
+    dishes: categoryCount[cat],
+  }))
+
   const statusCount = {}
   allOrders.forEach((order) => {
     statusCount[order.status] = (statusCount[order.status] || 0) + 1
   })
 
-  const barData = Object.keys(statusCount).map((status) => ({
+  const statusBarData = Object.keys(statusCount).map((status) => ({
     status,
     count: statusCount[status],
   }))
 
-  const COLORS = ["#1B4332", "#1976d2", "#f59e0b", "#d62828", "#7c3aed"]
+  const revenueByDate = {}
+  allOrders.forEach((order) => {
+    const dateKey = new Date(order.createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    })
+    revenueByDate[dateKey] = (revenueByDate[dateKey] || 0) + (order.totalCost || 0)
+  })
+
+  const salesLineData = Object.keys(revenueByDate).map((date) => ({
+    date,
+    revenue: revenueByDate[date],
+  }))
+
+  const itemOrderCount = {}
+  allOrders.forEach((order) => {
+    ;(order.items || []).forEach((item) => {
+      itemOrderCount[item.name] = (itemOrderCount[item.name] || 0) + (item.qty || 0)
+    })
+  })
+
+  const mostOrderedItemsData = Object.keys(itemOrderCount)
+    .map((name) => ({
+      name,
+      qty: itemOrderCount[name],
+    }))
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 7)
+
+  const topOrderedItem =
+    mostOrderedItemsData.length > 0 ? mostOrderedItemsData[0].name : "None"
+
+  const COLORS = ["#1B4332", "#1976d2", "#f59e0b", "#d62828", "#7c3aed", "#06b6d4"]
 
   const cardStyle = {
     background: "white",
@@ -335,28 +374,16 @@ function Admin({ foods = [], setFoods }) {
   return (
     <div
       style={{
-        maxWidth: "1240px",
+        maxWidth: "1280px",
         margin: "0 auto",
         padding: "32px 20px 50px",
       }}
     >
       <div style={{ marginBottom: "24px" }}>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: "34px",
-            color: "#1f2937",
-          }}
-        >
+        <h1 style={{ margin: 0, fontSize: "34px", color: "#1f2937" }}>
           Admin Dashboard
         </h1>
-        <p
-          style={{
-            marginTop: "8px",
-            color: "#6b7280",
-            fontSize: "15px",
-          }}
-        >
+        <p style={{ marginTop: "8px", color: "#6b7280", fontSize: "15px" }}>
           Manage dishes, track real-time orders, revenue, and menu analytics.
         </p>
       </div>
@@ -370,33 +397,30 @@ function Admin({ foods = [], setFoods }) {
         }}
       >
         <div style={cardStyle}>
-          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
-            Menu Items
-          </p>
+          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>Menu Items</p>
           <h2 style={{ margin: "10px 0 0", color: "#111827" }}>{foods.length}</h2>
         </div>
 
         <div style={cardStyle}>
-          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
-            Total Orders
-          </p>
+          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>Total Orders</p>
           <h2 style={{ margin: "10px 0 0", color: "#111827" }}>{totalOrders}</h2>
         </div>
 
         <div style={cardStyle}>
-          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
-            Revenue
-          </p>
-          <h2 style={{ margin: "10px 0 0", color: "#111827" }}>
-            ${totalRevenue}
-          </h2>
+          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>Revenue</p>
+          <h2 style={{ margin: "10px 0 0", color: "#111827" }}>${totalRevenue}</h2>
+        </div>
+
+        <div style={cardStyle}>
+          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>Top Ordered Item</p>
+          <h2 style={{ margin: "10px 0 0", color: "#111827" }}>{topOrderedItem}</h2>
         </div>
       </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))",
+          gridTemplateColumns: "repeat(auto-fit,minmax(340px,1fr))",
           gap: "20px",
           marginBottom: "30px",
         }}
@@ -425,27 +449,76 @@ function Admin({ foods = [], setFoods }) {
         </div>
 
         <div style={cardStyle}>
+          <h3 style={{ marginTop: 0, color: "#111827" }}>Dishes by Category</h3>
+          <div style={{ width: "100%", height: "280px" }}>
+            <ResponsiveContainer>
+              <BarChart data={dishesBarData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="category" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="dishes" fill="#1976d2" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div style={cardStyle}>
           <h3 style={{ marginTop: 0, color: "#111827" }}>Orders by Status</h3>
           <div style={{ width: "100%", height: "280px" }}>
             <ResponsiveContainer>
-              <BarChart data={barData}>
+              <BarChart data={statusBarData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="status" />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
+                <Legend />
                 <Bar dataKey="count" fill="#1B4332" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div style={cardStyle}>
+          <h3 style={{ marginTop: 0, color: "#111827" }}>Sales Chart</h3>
+          <div style={{ width: "100%", height: "280px" }}>
+            <ResponsiveContainer>
+              <LineChart data={salesLineData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#f59e0b"
+                  strokeWidth={3}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div style={{ ...cardStyle, gridColumn: "1 / -1" }}>
+          <h3 style={{ marginTop: 0, color: "#111827" }}>Most Ordered Items</h3>
+          <div style={{ width: "100%", height: "320px" }}>
+            <ResponsiveContainer>
+              <BarChart data={mostOrderedItemsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="qty" fill="#d62828" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          ...cardStyle,
-          marginBottom: "30px",
-        }}
-      >
+      <div style={{ ...cardStyle, marginBottom: "30px" }}>
         <div
           style={{
             display: "flex",
@@ -460,13 +533,7 @@ function Admin({ foods = [], setFoods }) {
             <h2 style={{ margin: 0, color: "#111827" }}>
               {editingId ? "Edit Dish" : "Add New Dish"}
             </h2>
-            <p
-              style={{
-                margin: "6px 0 0",
-                color: "#6b7280",
-                fontSize: "14px",
-              }}
-            >
+            <p style={{ margin: "6px 0 0", color: "#6b7280", fontSize: "14px" }}>
               Fill in the details and keep your menu updated in real time.
             </p>
           </div>
@@ -576,13 +643,7 @@ function Admin({ foods = [], setFoods }) {
           }}
         >
           <div>
-            <p
-              style={{
-                margin: "0 0 10px",
-                fontWeight: "600",
-                color: "#111827",
-              }}
-            >
+            <p style={{ margin: "0 0 10px", fontWeight: "600", color: "#111827" }}>
               Image Preview
             </p>
             <img
@@ -606,13 +667,7 @@ function Admin({ foods = [], setFoods }) {
               padding: "18px",
             }}
           >
-            <p
-              style={{
-                margin: 0,
-                color: "#6b7280",
-                fontSize: "14px",
-              }}
-            >
+            <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
               Current form summary
             </p>
             <h3 style={{ margin: "8px 0 10px", color: "#111827" }}>
@@ -680,13 +735,7 @@ function Admin({ foods = [], setFoods }) {
                         alignItems: "start",
                       }}
                     >
-                      <h3
-                        style={{
-                          margin: 0,
-                          color: "#111827",
-                          fontSize: "20px",
-                        }}
-                      >
+                      <h3 style={{ margin: 0, color: "#111827", fontSize: "20px" }}>
                         {food.name}
                       </h3>
                       <span
