@@ -264,9 +264,6 @@ function App() {
                   padding: "0 20px 40px",
                 }}
               >
-                {filteredFoods.length === 0 ? (
-  <p style={{ color: "#6b7280" }}>No dishes available.</p>
-) : (
   {filteredFoods.length === 0 ? (
   <p style={{ color: "#6b7280" }}>No dishes available.</p>
 ) : (
@@ -308,7 +305,6 @@ element={<OrderHistory />}
             <Admin
               foods={foods}
               setFoods={setFoods}
-              orders={orders}
             />
           }
         />

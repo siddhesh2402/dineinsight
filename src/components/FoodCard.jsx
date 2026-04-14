@@ -1,8 +1,10 @@
 import hero from "../assets/hero-food.jpg"
 
-function FoodCard({ food, cart, addToCart, removeFromCart }) {
+function FoodCard({ food, cart = [], addToCart, removeFromCart }) {
   const imgSrc =
-    food.image && food.image.trim() !== "" ? food.image : hero
+    typeof food.image === "string" && food.image.trim() !== ""
+      ? food.image
+      : hero
 
   const cartItem = cart.find((item) => item._id === food._id)
   const qty = cartItem ? cartItem.qty : 0
@@ -27,7 +29,7 @@ function FoodCard({ food, cart, addToCart, removeFromCart }) {
       <div style={{ position: "relative" }}>
         <img
           src={imgSrc}
-          alt={food.name}
+          alt={food.name || "Food item"}
           style={{
             width: "100%",
             height: "200px",
@@ -48,7 +50,7 @@ function FoodCard({ food, cart, addToCart, removeFromCart }) {
             fontWeight: "600",
           }}
         >
-          {food.category}
+          {food.category || "Food"}
         </span>
       </div>
 
@@ -60,7 +62,7 @@ function FoodCard({ food, cart, addToCart, removeFromCart }) {
             color: "#111827",
           }}
         >
-          {food.name}
+          {food.name || "Unnamed Dish"}
         </h3>
 
         <p
@@ -89,7 +91,7 @@ function FoodCard({ food, cart, addToCart, removeFromCart }) {
               color: "#111827",
             }}
           >
-            ${food.price}
+            ${food.price ?? 0}
           </span>
 
           <span
@@ -99,7 +101,7 @@ function FoodCard({ food, cart, addToCart, removeFromCart }) {
               fontWeight: "600",
             }}
           >
-            ⭐ {food.rating || 4.5} ({food.reviews || 100})
+            ⭐ {food.rating ?? 4.5} ({food.reviews ?? 100})
           </span>
         </div>
 
@@ -115,13 +117,6 @@ function FoodCard({ food, cart, addToCart, removeFromCart }) {
               borderRadius: "10px",
               cursor: "pointer",
               fontWeight: "600",
-              transition: "0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#16382a"
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#1B4332"
             }}
           >
             Add to Cart
