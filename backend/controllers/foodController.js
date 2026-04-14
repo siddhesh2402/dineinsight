@@ -1,430 +1,97 @@
-import { useEffect, useState } from "react"
-import hero from "../assets/hero-food.jpg"
+const Food = require("../models/Food")
 
-function Admin({ foods = [], setFoods, orders = [] }) {
-  const API_URL = import.meta.env.VITE_API_URL
-
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    category: "Pizza",
-    price: "",
-    image: "",
-  })
-
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [editingId, setEditingId] = useState(null)
-
-  const imagePreview =
-    form.image && form.image.trim() !== "" ? form.image : hero
-
-  const fetchFoods = async () => {
-    try {
-      setError("")
-      const res = await fetch(`${API_URL}/api/foods`)
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch foods: ${res.status}`)
-      }
-
-      const data = await res.json()
-      setFoods(Array.isArray(data) ? data : [])
-    } catch (err) {
-      console.error("Fetch foods error:", err)
-      setError("Could not load foods")
-      setFoods([])
-    }
+const getFoods = async (req, res) => {
+  try {
+    const foods = await Food.find().sort({ createdAt: -1 })
+    res.status(200).json(foods)
+  } catch (error) {
+    console.error("Get foods error:", error)
+    res.status(500).json({ message: "Server error" })
   }
-
-  useEffect(() => {
-    if (API_URL) {
-      fetchFoods()
-    }
-  }, [API_URL])
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const resetForm = () => {
-    setForm({
-      name: "",
-      description: "",
-      category: "Pizza",
-      price: "",
-      image: "",
-    })
-    setEditingId(null)
-  }
-
-  const addOrUpdateFood = async () => {
-    if (!form.name.trim() || !form.category.trim() || !form.price) {
-      setError("Name, category and price are required")
-      return
-    }
-
-    try {
-      setLoading(true)
-      setError("")
-
-      const payload = {
-        name: form.name.trim(),
-        description: form.description.trim(),
-        category: form.category,
-        price: Number(form.price),
-        image: form.image.trim(),
-      }
-
-      const url = editingId
-        ? `${API_URL}/api/foods/${editingId}`
-        : `${API_URL}/api/foods`
-
-      const method = editingId ? "PUT" : "POST"
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        throw new Error(`Failed to save dish: ${res.status}`)
-      }
-
-      resetForm()
-      await fetchFoods()
-    } catch (err) {
-      console.error("Save food error:", err)
-      setError("Could not save dish")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const deleteFood = async (id) => {
-    try {
-      setError("")
-
-      const res = await fetch(`${API_URL}/api/foods/${id}`, {
-        method: "DELETE",
-      })
-
-      if (!res.ok) {
-        throw new Error(`Failed to delete food: ${res.status}`)
-      }
-
-      await fetchFoods()
-    } catch (err) {
-      console.error("Delete food error:", err)
-      setError("Could not delete dish")
-    }
-  }
-
-  const startEdit = (food) => {
-    setForm({
-      name: food.name || "",
-      description: food.description || "",
-      category: food.category || "Pizza",
-      price: food.price || "",
-      image: food.image || "",
-    })
-    setEditingId(food._id)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  const totalOrders = orders.length
-  const totalRevenue = orders.reduce(
-    (sum, order) => sum + (order.total || 0),
-    0
-  )
-
-  return (
-    <div style={{ padding: "30px", maxWidth: "1200px", margin: "0 auto" }}>
-      <h1 style={{ marginBottom: "20px" }}>Admin Panel - Manage Dishes</h1>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-          gap: "15px",
-          marginBottom: "30px",
-        }}
-      >
-        <div
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Menu Items</h3>
-          <p style={{ fontSize: "24px", margin: "10px 0 0" }}>{foods.length}</p>
-        </div>
-
-        <div
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Total Orders</h3>
-          <p style={{ fontSize: "24px", margin: "10px 0 0" }}>{totalOrders}</p>
-        </div>
-
-        <div
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Revenue</h3>
-          <p style={{ fontSize: "24px", margin: "10px 0 0" }}>${totalRevenue}</p>
-        </div>
-      </div>
-
-      <div
-        style={{
-          background: "white",
-          padding: "20px",
-          borderRadius: "12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          marginBottom: "30px",
-        }}
-      >
-        <h2 style={{ marginTop: 0 }}>
-          {editingId ? "Edit Dish" : "Add New Dish"}
-        </h2>
-
-        {error && (
-          <p style={{ color: "red", marginBottom: "15px" }}>{error}</p>
-        )}
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-            gap: "15px",
-            alignItems: "start",
-          }}
-        >
-          <input
-            name="name"
-            placeholder="Dish name"
-            value={form.name}
-            onChange={handleChange}
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-            }}
-          />
-
-          <input
-            name="description"
-            placeholder="Description"
-            value={form.description}
-            onChange={handleChange}
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-            }}
-          />
-
-          <input
-            name="price"
-            type="number"
-            placeholder="Price"
-            value={form.price}
-            onChange={handleChange}
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-            }}
-          />
-
-          <input
-            name="image"
-            placeholder="Image URL"
-            value={form.image}
-            onChange={handleChange}
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-            }}
-          />
-
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-            }}
-          >
-            <option>Pizza</option>
-            <option>Burger</option>
-            <option>Pasta</option>
-            <option>Dessert</option>
-            <option>Main</option>
-          </select>
-
-          <button
-            onClick={addOrUpdateFood}
-            disabled={loading}
-            style={{
-              background: "#1B4332",
-              color: "white",
-              border: "none",
-              padding: "12px 18px",
-              borderRadius: "8px",
-              cursor: "pointer",
-            }}
-          >
-            {loading ? "Saving..." : editingId ? "Update Dish" : "Add Dish"}
-          </button>
-
-          {editingId && (
-            <button
-              onClick={resetForm}
-              style={{
-                background: "#999",
-                color: "white",
-                border: "none",
-                padding: "12px 18px",
-                borderRadius: "8px",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
-          )}
-        </div>
-
-        <div style={{ marginTop: "20px", maxWidth: "320px" }}>
-          <p style={{ marginBottom: "8px", fontWeight: "bold" }}>Image Preview</p>
-          <img
-            src={imagePreview}
-            alt="Preview"
-            style={{
-              width: "100%",
-              height: "180px",
-              objectFit: "cover",
-              borderRadius: "10px",
-              border: "1px solid #ddd",
-            }}
-          />
-        </div>
-      </div>
-
-      <div>
-        <h2>All Dishes</h2>
-
-        {foods.length === 0 ? (
-          <p>No dishes available</p>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
-              gap: "20px",
-            }}
-          >
-            {foods.map((food) => {
-              const imgSrc =
-                food.image && food.image.trim() !== "" ? food.image : hero
-
-              return (
-                <div
-                  key={food._id}
-                  style={{
-                    background: "white",
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  <img
-                    src={imgSrc}
-                    alt={food.name}
-                    style={{
-                      width: "100%",
-                      height: "180px",
-                      objectFit: "cover",
-                    }}
-                  />
-
-                  <div style={{ padding: "15px" }}>
-                    <h3 style={{ marginTop: 0, marginBottom: "8px" }}>
-                      {food.name}
-                    </h3>
-
-                    <p style={{ margin: "0 0 8px", color: "#555" }}>
-                      {food.description || "No description"}
-                    </p>
-
-                    <p style={{ margin: "0 0 6px" }}>
-                      <strong>Category:</strong> {food.category}
-                    </p>
-
-                    <p style={{ margin: "0 0 12px" }}>
-                      <strong>Price:</strong> ${food.price}
-                    </p>
-
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <button
-                        onClick={() => startEdit(food)}
-                        style={{
-                          background: "#1B4332",
-                          color: "white",
-                          border: "none",
-                          padding: "10px 14px",
-                          borderRadius: "8px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() => deleteFood(food._id)}
-                        style={{
-                          background: "#d62828",
-                          color: "white",
-                          border: "none",
-                          padding: "10px 14px",
-                          borderRadius: "8px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  )
 }
 
-export default Admin
+const createFood = async (req, res) => {
+  try {
+    const { name, description, category, price, image } = req.body
+
+    if (!name || !category || price === undefined) {
+      return res.status(400).json({
+        message: "Name, category and price are required",
+      })
+    }
+
+    const newFood = new Food({
+      name: name.trim(),
+      description: description || "",
+      category,
+      price: Number(price),
+      image: image || "",
+      rating: 4.5,
+      reviews: 100,
+    })
+
+    const savedFood = await newFood.save()
+    res.status(201).json(savedFood)
+  } catch (error) {
+    console.error("Create food error:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+}
+
+const updateFood = async (req, res) => {
+  try {
+    const { name, description, category, price, image } = req.body
+
+    if (!name || !category || price === undefined) {
+      return res.status(400).json({
+        message: "Name, category and price are required",
+      })
+    }
+
+    const updatedFood = await Food.findByIdAndUpdate(
+      req.params.id,
+      {
+        name: name.trim(),
+        description: description || "",
+        category,
+        price: Number(price),
+        image: image || "",
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    )
+
+    if (!updatedFood) {
+      return res.status(404).json({ message: "Food not found" })
+    }
+
+    res.status(200).json(updatedFood)
+  } catch (error) {
+    console.error("Update food error:", error)
+    res.status(500).json({ message: error.message || "Server error" })
+  }
+}
+
+const deleteFood = async (req, res) => {
+  try {
+    const deletedFood = await Food.findByIdAndDelete(req.params.id)
+
+    if (!deletedFood) {
+      return res.status(404).json({ message: "Food not found" })
+    }
+
+    res.status(200).json({ message: "Food deleted successfully" })
+  } catch (error) {
+    console.error("Delete food error:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+}
+
+module.exports = {
+  getFoods,
+  createFood,
+  updateFood,
+  deleteFood,
+}
