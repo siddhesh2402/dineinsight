@@ -264,9 +264,25 @@ function App() {
                   padding: "0 20px 40px",
                 }}
               >
+                </div>
   {filteredFoods.length === 0 ? (
-  <p style={{ color: "#6b7280" }}>No dishes available.</p>
-) : (
+  <p 
+  style={{
+    textAlign: "center",
+    color: "#6b7280",
+    fontSize: "16px",
+    marginTop: "40px",
+    gridColumn: "1 / -1",
+    background: "white",
+    padding: "20px",
+    borderRadius: "12px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+  }}
+>
+  No dishes available
+  
+  .</p>
+) :
   filteredFoods.map((food) => (
     <FoodCard
       key={food._id}
@@ -277,7 +293,7 @@ function App() {
                   />
                 ))}
               </div>
-            </div>
+            
           }
         />
 
