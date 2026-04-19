@@ -14,17 +14,6 @@ function Navbar({ cartCount, setShowLogin, deliveryAddress, setDeliveryAddress }
     window.location.href = "/"
   }
 
-  const changeLocation = () => {
-    const newAddress = window.prompt(
-      "Enter your delivery address",
-      deliveryAddress || ""
-    )
-
-    if (newAddress && newAddress.trim()) {
-      setDeliveryAddress(newAddress)
-    }
-  }
-
   const linkStyle = {
     color: "#111827",
     textDecoration: "none",
@@ -126,77 +115,81 @@ function Navbar({ cartCount, setShowLogin, deliveryAddress, setDeliveryAddress }
             justifyContent: "flex-end",
           }}
         >
-          {deliveryAddress && (
-            <button
-              onClick={changeLocation}
-              style={{
-                background: "#fff7ed",
-                border: "1px solid #fed7aa",
-                color: "#9a3412",
-                borderRadius: "999px",
-                padding: "10px 14px",
-                fontWeight: "700",
-                fontSize: "13px",
-                cursor: "pointer",
-                maxWidth: "280px",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              title={deliveryAddress}
-            >
-              Deliver to: {deliveryAddress}
-            </button>
-          )}
-
           {!isInitialLanding && (
             <>
-              <Link
-                to="/menu"
-                style={{
-                  ...linkStyle,
-                  background: "#f9fafb",
-                  border: "1px solid #e5e7eb",
-                }}
-              >
-                Menu
-              </Link>
+              {role === "admin" ? (
+                <>
+                  <Link
+                    to="/menu"
+                    style={{
+                      ...linkStyle,
+                      background: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
+                    Menu
+                  </Link>
 
-              <Link
-                to="/cart"
-                style={{
-                  ...linkStyle,
-                  background: "#f9fafb",
-                  border: "1px solid #e5e7eb",
-                }}
-              >
-                Cart ({cartCount})
-              </Link>
+                  <Link
+                    to="/admin"
+                    style={{
+                      ...linkStyle,
+                      background: "#ecfdf5",
+                      border: "1px solid #d1fae5",
+                      color: "#065f46",
+                    }}
+                  >
+                    Admin
+                  </Link>
 
-              <Link
-                to="/orders"
-                style={{
-                  ...linkStyle,
-                  background: "#eff6ff",
-                  border: "1px solid #dbeafe",
-                  color: "#1d4ed8",
-                }}
-              >
-                My Orders
-              </Link>
+                  <Link
+                    to="/orders"
+                    style={{
+                      ...linkStyle,
+                      background: "#eff6ff",
+                      border: "1px solid #dbeafe",
+                      color: "#1d4ed8",
+                    }}
+                  >
+                    Orders
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/menu"
+                    style={{
+                      ...linkStyle,
+                      background: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
+                    Menu
+                  </Link>
 
-              {role === "admin" && (
-                <Link
-                  to="/admin"
-                  style={{
-                    ...linkStyle,
-                    background: "#ecfdf5",
-                    border: "1px solid #d1fae5",
-                    color: "#065f46",
-                  }}
-                >
-                  Admin
-                </Link>
+                  <Link
+                    to="/cart"
+                    style={{
+                      ...linkStyle,
+                      background: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
+                    Cart ({cartCount})
+                  </Link>
+
+                  <Link
+                    to="/orders"
+                    style={{
+                      ...linkStyle,
+                      background: "#eff6ff",
+                      border: "1px solid #dbeafe",
+                      color: "#1d4ed8",
+                    }}
+                  >
+                    My Orders
+                  </Link>
+                </>
               )}
             </>
           )}

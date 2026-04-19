@@ -608,28 +608,37 @@ function App() {
       {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
 
       <Routes>
-        <Route path="/" element={LandingPage} />
-        <Route path="/menu" element={MenuPage} />
+  <Route
+    path="/"
+    element={
+      localStorage.getItem("role") === "admin" ? (
+        MenuPage
+      ) : (
+        LandingPage
+      )
+    }
+  />
+  <Route path="/menu" element={MenuPage} />
 
-        <Route
-          path="/cart"
-          element={
-            <Cart
-              cart={cart}
-              addToCart={addToCart}
-              removeFromCart={removeFromCart}
-              checkout={checkout}
-            />
-          }
-        />
+  <Route
+    path="/cart"
+    element={
+      <Cart
+        cart={cart}
+        addToCart={addToCart}
+        removeFromCart={removeFromCart}
+        checkout={checkout}
+      />
+    }
+  />
 
-        <Route path="/orders" element={<OrderHistory />} />
+  <Route path="/orders" element={<OrderHistory />} />
 
-        <Route
-          path="/admin"
-          element={<Admin foods={foods} setFoods={setFoods} />}
-        />
-      </Routes>
+  <Route
+    path="/admin"
+    element={<Admin foods={foods} setFoods={setFoods} />}
+  />
+</Routes>
     </div>
   )
 }
