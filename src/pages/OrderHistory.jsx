@@ -3,6 +3,9 @@ import hero from "../assets/hero-food.jpg"
 
 function OrderHistory() {
   const API_URL = import.meta.env.VITE_API_URL
+  const role = localStorage.getItem("role")
+  const userEmail = localStorage.getItem("userEmail")
+
   const [orders, setOrders] = useState([])
   const [error, setError] = useState("")
   const [updatingId, setUpdatingId] = useState("")
@@ -10,7 +13,13 @@ function OrderHistory() {
   const fetchOrders = async () => {
     try {
       setError("")
-      const res = await fetch(`${API_URL}/api/orders`)
+
+      const endpoint =
+        role === "admin"
+          ? `${API_URL}/api/orders`
+          : `${API_URL}/api/orders?email=${encodeURIComponent(userEmail || "")}`
+
+      const res = await fetch(endpoint)
       const data = await res.json().catch(() => [])
 
       if (!res.ok) {
@@ -98,6 +107,61 @@ function OrderHistory() {
     }
   }
 
+  const steps = ["Placed", "Preparing", "Out for Delivery", "Delivered"]
+
+  const getStepIndex = (status) => {
+    const index = steps.indexOf(status)
+    return index === -1 ? 0 : index
+  }
+
+  const pageTitle = role === "admin" ? "Order Management" : "My Orders"
+  const pageSubtitle =
+    role === "admin"
+      ? "View all orders, customer details, ordered items, and update delivery status."
+      : "Track your orders and view the latest delivery status updates."
+
+  if (role !== "admin" && !userEmail) {
+    return (
+      <div
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto",
+          padding: "32px 20px 48px",
+        }}
+      >
+        <div
+          style={{
+            background: "white",
+            borderRadius: "24px",
+            padding: "34px 24px",
+            textAlign: "center",
+            boxShadow: "0 12px 28px rgba(0,0,0,0.06)",
+            border: "1px solid #eef2f7",
+          }}
+        >
+          <h2
+            style={{
+              margin: "0 0 10px",
+              color: "#111827",
+              fontWeight: "800",
+            }}
+          >
+            Sign in to view your orders
+          </h2>
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              fontSize: "15px",
+            }}
+          >
+            Please sign in to track your placed orders and delivery progress.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       style={{
@@ -115,7 +179,7 @@ function OrderHistory() {
             color: "#111827",
           }}
         >
-          Order History
+          {pageTitle}
         </h1>
         <p
           style={{
@@ -124,7 +188,7 @@ function OrderHistory() {
             fontSize: "15px",
           }}
         >
-          View placed orders, customer details, items, and update delivery status.
+          {pageSubtitle}
         </p>
       </div>
 
@@ -156,7 +220,7 @@ function OrderHistory() {
             color: "#6b7280",
           }}
         >
-          No orders available.
+          {role === "admin" ? "No orders available." : "You have not placed any orders yet."}
         </div>
       ) : (
         <div
@@ -167,6 +231,7 @@ function OrderHistory() {
         >
           {orders.map((order) => {
             const statusStyles = getStatusStyles(order.status)
+            const currentStepIndex = getStepIndex(order.status)
 
             return (
               <div
@@ -181,11 +246,12 @@ function OrderHistory() {
               >
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "1.3fr 1fr",
-                    gap: "20px",
-                    marginBottom: "20px",
+                    display: "flex",
+                    justifyContent: "space-between",
                     alignItems: "start",
+                    gap: "16px",
+                    flexWrap: "wrap",
+                    marginBottom: "18px",
                   }}
                 >
                   <div>
@@ -195,7 +261,7 @@ function OrderHistory() {
                         alignItems: "center",
                         gap: "10px",
                         flexWrap: "wrap",
-                        marginBottom: "12px",
+                        marginBottom: "10px",
                       }}
                     >
                       <h2
@@ -206,7 +272,9 @@ function OrderHistory() {
                           fontWeight: "800",
                         }}
                       >
-                        {order.customerName || "Guest User"}
+                        {role === "admin"
+                          ? order.customerName || "Guest User"
+                          : `Order #${order._id.slice(-6).toUpperCase()}`}
                       </h2>
 
                       <span
@@ -230,15 +298,21 @@ function OrderHistory() {
                         fontSize: "14px",
                       }}
                     >
-                      <p style={{ margin: 0 }}>
-                        <strong>Phone:</strong> {order.phone}
-                      </p>
-                      <p style={{ margin: 0 }}>
-                        <strong>Email:</strong> {order.email || "Not provided"}
-                      </p>
+                      {role === "admin" && (
+                        <>
+                          <p style={{ margin: 0 }}>
+                            <strong>Phone:</strong> {order.phone}
+                          </p>
+                          <p style={{ margin: 0 }}>
+                            <strong>Email:</strong> {order.email || "Not provided"}
+                          </p>
+                        </>
+                      )}
+
                       <p style={{ margin: 0 }}>
                         <strong>Address:</strong> {order.address}
                       </p>
+
                       <p style={{ margin: 0 }}>
                         <strong>Ordered On:</strong>{" "}
                         {order.createdAt
@@ -254,6 +328,7 @@ function OrderHistory() {
                       border: "1px solid #e5e7eb",
                       borderRadius: "18px",
                       padding: "16px",
+                      minWidth: "260px",
                     }}
                   >
                     <p
@@ -298,40 +373,92 @@ function OrderHistory() {
                       </div>
                     </div>
 
-                    <div style={{ marginTop: "16px" }}>
-                      <label
-                        style={{
-                          display: "block",
-                          marginBottom: "8px",
-                          fontSize: "13px",
-                          color: "#6b7280",
-                          fontWeight: "700",
-                        }}
-                      >
-                        Update Status
-                      </label>
+                    {role === "admin" ? (
+                      <div style={{ marginTop: "16px" }}>
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "8px",
+                            fontSize: "13px",
+                            color: "#6b7280",
+                            fontWeight: "700",
+                          }}
+                        >
+                          Update Status
+                        </label>
 
-                      <select
-                        value={order.status}
-                        onChange={(e) => updateStatus(order._id, e.target.value)}
-                        disabled={updatingId === order._id}
-                        style={{
-                          width: "100%",
-                          padding: "12px 14px",
-                          borderRadius: "12px",
-                          border: "1px solid #d1d5db",
-                          background: "white",
-                          fontSize: "14px",
-                          outline: "none",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <option>Placed</option>
-                        <option>Preparing</option>
-                        <option>Out for Delivery</option>
-                        <option>Delivered</option>
-                      </select>
-                    </div>
+                        <select
+                          value={order.status}
+                          onChange={(e) => updateStatus(order._id, e.target.value)}
+                          disabled={updatingId === order._id}
+                          style={{
+                            width: "100%",
+                            padding: "12px 14px",
+                            borderRadius: "12px",
+                            border: "1px solid #d1d5db",
+                            background: "white",
+                            fontSize: "14px",
+                            outline: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <option>Placed</option>
+                          <option>Preparing</option>
+                          <option>Out for Delivery</option>
+                          <option>Delivered</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div style={{ marginTop: "16px" }}>
+                        <p
+                          style={{
+                            margin: "0 0 10px",
+                            fontSize: "13px",
+                            color: "#6b7280",
+                            fontWeight: "700",
+                          }}
+                        >
+                          Delivery Progress
+                        </p>
+
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(4, 1fr)",
+                            gap: "8px",
+                          }}
+                        >
+                          {steps.map((step, index) => {
+                            const isActive = index <= currentStepIndex
+
+                            return (
+                              <div key={step} style={{ textAlign: "center" }}>
+                                <div
+                                  style={{
+                                    width: "100%",
+                                    height: "10px",
+                                    borderRadius: "999px",
+                                    background: isActive ? "#1B4332" : "#e5e7eb",
+                                    marginBottom: "8px",
+                                  }}
+                                />
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "11px",
+                                    fontWeight: "700",
+                                    color: isActive ? "#111827" : "#9ca3af",
+                                    lineHeight: "1.3",
+                                  }}
+                                >
+                                  {step}
+                                </p>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

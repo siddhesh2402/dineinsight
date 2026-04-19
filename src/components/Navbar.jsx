@@ -1,14 +1,28 @@
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 
-function Navbar({ cartCount, setShowLogin }) {
+function Navbar({ cartCount, setShowLogin, deliveryAddress, setDeliveryAddress }) {
   const user = localStorage.getItem("userName")
   const role = localStorage.getItem("role")
+  const location = useLocation()
+
+  const isInitialLanding = location.pathname === "/" && !deliveryAddress
 
   const logout = () => {
     localStorage.removeItem("role")
     localStorage.removeItem("userName")
     localStorage.removeItem("userEmail")
     window.location.href = "/"
+  }
+
+  const changeLocation = () => {
+    const newAddress = window.prompt(
+      "Enter your delivery address",
+      deliveryAddress || ""
+    )
+
+    if (newAddress && newAddress.trim()) {
+      setDeliveryAddress(newAddress)
+    }
   }
 
   const linkStyle = {
@@ -109,42 +123,54 @@ function Navbar({ cartCount, setShowLogin }) {
             alignItems: "center",
             gap: "10px",
             flexWrap: "wrap",
+            justifyContent: "flex-end",
           }}
         >
-          <Link
-            to="/"
-            style={{
-              ...linkStyle,
-              background: "#f9fafb",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            Home
-          </Link>
+          {deliveryAddress && (
+            <button
+              onClick={changeLocation}
+              style={{
+                background: "#fff7ed",
+                border: "1px solid #fed7aa",
+                color: "#9a3412",
+                borderRadius: "999px",
+                padding: "10px 14px",
+                fontWeight: "700",
+                fontSize: "13px",
+                cursor: "pointer",
+                maxWidth: "280px",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+              title={deliveryAddress}
+            >
+              Deliver to: {deliveryAddress}
+            </button>
+          )}
 
-          <Link
-            to="/cart"
-            style={{
-              ...linkStyle,
-              background: "#f9fafb",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            Cart ({cartCount})
-          </Link>
-
-          {role === "admin" && (
+          {!isInitialLanding && (
             <>
               <Link
-                to="/admin"
+                to="/menu"
                 style={{
                   ...linkStyle,
-                  background: "#ecfdf5",
-                  border: "1px solid #d1fae5",
-                  color: "#065f46",
+                  background: "#f9fafb",
+                  border: "1px solid #e5e7eb",
                 }}
               >
-                Admin
+                Menu
+              </Link>
+
+              <Link
+                to="/cart"
+                style={{
+                  ...linkStyle,
+                  background: "#f9fafb",
+                  border: "1px solid #e5e7eb",
+                }}
+              >
+                Cart ({cartCount})
               </Link>
 
               <Link
@@ -156,8 +182,22 @@ function Navbar({ cartCount, setShowLogin }) {
                   color: "#1d4ed8",
                 }}
               >
-                Orders
+                My Orders
               </Link>
+
+              {role === "admin" && (
+                <Link
+                  to="/admin"
+                  style={{
+                    ...linkStyle,
+                    background: "#ecfdf5",
+                    border: "1px solid #d1fae5",
+                    color: "#065f46",
+                  }}
+                >
+                  Admin
+                </Link>
+              )}
             </>
           )}
 

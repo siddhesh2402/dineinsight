@@ -10,6 +10,8 @@ const orderSchema = new mongoose.Schema(
     email: {
       type: String,
       default: "",
+      trim: true,
+      lowercase: true,
     },
     phone: {
       type: String,
@@ -54,6 +56,7 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
+      enum: ["Placed", "Preparing", "Out for Delivery", "Delivered"],
       default: "Placed",
     },
   },

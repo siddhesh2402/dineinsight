@@ -1,10 +1,21 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import hero from "../assets/hero-food.jpg"
 
 function Cart({ cart = [], addToCart, removeFromCart, checkout }) {
-  const [customerName, setCustomerName] = useState("")
+  const savedAddress = localStorage.getItem("deliveryAddress") || ""
+  const savedUserName = localStorage.getItem("userName") || ""
+
+  const [customerName, setCustomerName] = useState(savedUserName)
   const [phone, setPhone] = useState("")
-  const [address, setAddress] = useState("")
+  const [address, setAddress] = useState(savedAddress)
+
+  useEffect(() => {
+    setAddress(localStorage.getItem("deliveryAddress") || "")
+  }, [])
+
+  useEffect(() => {
+    setCustomerName(localStorage.getItem("userName") || "")
+  }, [])
 
   const total = useMemo(() => {
     return cart.reduce((sum, item) => sum + item.price * item.qty, 0)
@@ -14,7 +25,7 @@ function Cart({ cart = [], addToCart, removeFromCart, checkout }) {
     return cart.reduce((sum, item) => sum + item.qty, 0)
   }, [cart])
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) {
       alert("Your cart is empty")
       return
@@ -25,11 +36,19 @@ function Cart({ cart = [], addToCart, removeFromCart, checkout }) {
       return
     }
 
-    checkout({
-      customerName,
-      phone,
-      address,
-    })
+    localStorage.setItem("deliveryAddress", address.trim())
+
+    try {
+      await checkout({
+        customerName,
+        phone,
+        address: address.trim(),
+      })
+
+      setPhone("")
+    } catch (error) {
+      console.error("Checkout failed:", error)
+    }
   }
 
   const inputStyle = {
@@ -104,7 +123,7 @@ function Cart({ cart = [], addToCart, removeFromCart, checkout }) {
               fontSize: "15px",
             }}
           >
-            Add some delicious dishes from the home page to get started.
+            Add some delicious dishes from the menu page to get started.
           </p>
         </div>
       ) : (

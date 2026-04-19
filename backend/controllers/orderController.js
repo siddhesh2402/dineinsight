@@ -2,7 +2,15 @@ const Order = require("../models/Order")
 
 const getOrders = async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 })
+    const { email } = req.query
+
+    let filter = {}
+
+    if (email && email.trim() !== "") {
+      filter.email = email.trim().toLowerCase()
+    }
+
+    const orders = await Order.find(filter).sort({ createdAt: -1 })
     res.status(200).json(orders)
   } catch (error) {
     console.error("Get orders error:", error)
@@ -36,12 +44,13 @@ const createOrder = async (req, res) => {
 
     const order = await Order.create({
       customerName: customerName || "Guest User",
-      email: email || "",
+      email: (email || "").trim().toLowerCase(),
       phone,
       address,
       items: normalizedItems,
       totalItems,
       totalCost,
+      status: "Placed",
     })
 
     res.status(201).json(order)
@@ -54,6 +63,17 @@ const createOrder = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body
+
+    const allowedStatuses = [
+      "Placed",
+      "Preparing",
+      "Out for Delivery",
+      "Delivered",
+    ]
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid order status" })
+    }
 
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.id,

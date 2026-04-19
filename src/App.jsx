@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import Navbar from "./components/Navbar"
 import FoodCard from "./components/FoodCard"
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, useNavigate } from "react-router-dom"
 import Cart from "./pages/Cart"
 import Admin from "./pages/Admin"
 import hero from "./assets/hero-food.jpg"
@@ -10,6 +10,7 @@ import OrderHistory from "./pages/OrderHistory"
 
 function App() {
   const API_URL = import.meta.env.VITE_API_URL
+  const navigate = useNavigate()
 
   const [foods, setFoods] = useState([])
   const [category, setCategory] = useState("All")
@@ -17,6 +18,13 @@ function App() {
   const [cart, setCart] = useState([])
   const [orders, setOrders] = useState([])
   const [showLogin, setShowLogin] = useState(false)
+
+  const [deliveryAddress, setDeliveryAddress] = useState(
+    localStorage.getItem("deliveryAddress") || ""
+  )
+  const [addressInput, setAddressInput] = useState(
+    localStorage.getItem("deliveryAddress") || ""
+  )
 
   const userEmail = localStorage.getItem("userEmail")
 
@@ -94,7 +102,8 @@ function App() {
         customerName: orderDetails.customerName || "Guest User",
         email: userEmail || "",
         phone: orderDetails.phone,
-        address: orderDetails.address,
+        address:
+          orderDetails.address || deliveryAddress || "Address not provided",
         items: cart,
       }
 
@@ -137,6 +146,449 @@ function App() {
 
   const categories = ["All", "Pizza", "Burger", "Pasta", "Dessert", "Main"]
 
+  const handleAddressContinue = () => {
+    if (!addressInput.trim()) {
+      alert("Please enter your delivery address")
+      return
+    }
+
+    const cleanedAddress = addressInput.trim()
+    localStorage.setItem("deliveryAddress", cleanedAddress)
+    setDeliveryAddress(cleanedAddress)
+    navigate("/menu")
+  }
+
+  const updateDeliveryAddress = (newAddress) => {
+    const cleanedAddress = (newAddress || "").trim()
+
+    if (!cleanedAddress) return
+
+    localStorage.setItem("deliveryAddress", cleanedAddress)
+    setDeliveryAddress(cleanedAddress)
+    setAddressInput(cleanedAddress)
+  }
+
+  const LandingPage = (
+    <div
+      style={{
+        minHeight: "calc(100vh - 74px)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `url(${hero})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "brightness(0.72)",
+        }}
+      />
+
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.12) 100%)",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          maxWidth: "1280px",
+          margin: "0 auto",
+          padding: "70px 20px",
+          minHeight: "calc(100vh - 74px)",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "720px",
+            color: "white",
+          }}
+        >
+          <div
+            style={{
+              display: "inline-block",
+              background: "rgba(255,255,255,0.18)",
+              backdropFilter: "blur(10px)",
+              padding: "10px 16px",
+              borderRadius: "999px",
+              fontSize: "13px",
+              fontWeight: "700",
+              marginBottom: "18px",
+            }}
+          >
+            Fast delivery. Fresh dishes. Better experience.
+          </div>
+
+          <h1
+            style={{
+              margin: "0 0 14px",
+              fontSize: "56px",
+              lineHeight: "1.05",
+              fontWeight: "800",
+            }}
+          >
+            Order food near you
+          </h1>
+
+          <p
+            style={{
+              margin: "0 0 26px",
+              fontSize: "18px",
+              lineHeight: "1.6",
+              color: "rgba(255,255,255,0.92)",
+              maxWidth: "640px",
+            }}
+          >
+            Enter your delivery address to explore dishes available for your area
+            and continue your DineInsight ordering experience.
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Enter delivery address"
+              value={addressInput}
+              onChange={(e) => setAddressInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleAddressContinue()
+                }
+              }}
+              style={{
+                flex: "1 1 360px",
+                minWidth: "280px",
+                padding: "17px 18px",
+                borderRadius: "14px",
+                border: "none",
+                outline: "none",
+                fontSize: "15px",
+                background: "white",
+                color: "#111827",
+                boxShadow: "0 10px 24px rgba(0,0,0,0.12)",
+              }}
+            />
+
+            <button
+              onClick={handleAddressContinue}
+              style={{
+                padding: "17px 24px",
+                border: "none",
+                borderRadius: "14px",
+                background: "#1B4332",
+                color: "white",
+                cursor: "pointer",
+                fontWeight: "700",
+                fontSize: "15px",
+                boxShadow: "0 12px 24px rgba(27,67,50,0.28)",
+              }}
+            >
+              Browse Menu
+            </button>
+          </div>
+
+          <p
+            style={{
+              marginTop: "14px",
+              fontSize: "14px",
+              color: "rgba(255,255,255,0.85)",
+            }}
+          >
+            Your saved address will be used again during checkout.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+
+  const MenuPage = (
+    <div>
+      <div
+        style={{
+          maxWidth: "1260px",
+          margin: "32px auto 0",
+          padding: "0 20px",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            borderRadius: "28px",
+            overflow: "hidden",
+            boxShadow: "0 18px 45px rgba(0,0,0,0.10)",
+            background: "white",
+          }}
+        >
+          <img
+            src={hero}
+            alt="Hero"
+            style={{
+              width: "100%",
+              height: "380px",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(90deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.05) 100%)",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              left: "40px",
+              bottom: "38px",
+              color: "white",
+              maxWidth: "560px",
+            }}
+          >
+            <div
+              style={{
+                display: "inline-block",
+                background: "rgba(255,255,255,0.18)",
+                backdropFilter: "blur(8px)",
+                padding: "8px 14px",
+                borderRadius: "999px",
+                fontSize: "13px",
+                fontWeight: "700",
+                marginBottom: "16px",
+              }}
+            >
+              Delivering to: {deliveryAddress || "your location"}
+            </div>
+
+            <h1
+              style={{
+                margin: "0 0 12px",
+                fontSize: "42px",
+                lineHeight: "1.1",
+                fontWeight: "800",
+              }}
+            >
+              Discover your next favorite meal
+            </h1>
+
+            <p
+              style={{
+                margin: 0,
+                fontSize: "16px",
+                lineHeight: "1.6",
+                color: "rgba(255,255,255,0.92)",
+              }}
+            >
+              Explore premium dishes, add items instantly, and manage your cart
+              with a smoother restaurant ordering experience.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          maxWidth: "1260px",
+          margin: "28px auto 0",
+          padding: "0 20px",
+        }}
+      >
+        <div
+          style={{
+            background: "rgba(255,255,255,0.75)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.8)",
+            borderRadius: "24px",
+            boxShadow: "0 12px 30px rgba(0,0,0,0.06)",
+            padding: "28px 24px",
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <h2
+              style={{
+                margin: "0 0 8px",
+                fontSize: "30px",
+                color: "#111827",
+                fontWeight: "800",
+              }}
+            >
+              Explore Our Menu
+            </h2>
+
+            <p
+              style={{
+                margin: 0,
+                color: "#6b7280",
+                fontSize: "15px",
+              }}
+            >
+              Search, filter, and add dishes instantly from the home page.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "22px",
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Search pizza, burger, pasta..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: "100%",
+                maxWidth: "460px",
+                padding: "15px 20px",
+                borderRadius: "999px",
+                border: "1px solid #e5e7eb",
+                outline: "none",
+                fontSize: "14px",
+                background: "white",
+                boxShadow: "0 6px 20px rgba(0,0,0,0.05)",
+              }}
+            />
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "12px",
+              marginTop: "22px",
+              flexWrap: "wrap",
+            }}
+          >
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategory(cat)}
+                style={{
+                  background: category === cat ? "#1B4332" : "white",
+                  color: category === cat ? "white" : "#374151",
+                  border:
+                    category === cat
+                      ? "1px solid #1B4332"
+                      : "1px solid #e5e7eb",
+                  padding: "11px 18px",
+                  borderRadius: "999px",
+                  cursor: "pointer",
+                  fontWeight: "700",
+                  fontSize: "14px",
+                  boxShadow:
+                    category === cat
+                      ? "0 10px 22px rgba(27,67,50,0.20)"
+                      : "0 6px 16px rgba(0,0,0,0.04)",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          maxWidth: "1260px",
+          margin: "28px auto 0",
+          padding: "0 20px 48px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+            marginBottom: "18px",
+          }}
+        >
+          <div>
+            <h3
+              style={{
+                margin: "0 0 6px",
+                color: "#111827",
+                fontSize: "24px",
+                fontWeight: "800",
+              }}
+            >
+              Featured Dishes
+            </h3>
+            <p
+              style={{
+                margin: 0,
+                color: "#6b7280",
+                fontSize: "14px",
+              }}
+            >
+              {filteredFoods.length} item
+              {filteredFoods.length === 1 ? "" : "s"} found
+            </p>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
+            gap: "26px",
+            alignItems: "stretch",
+          }}
+        >
+          {filteredFoods.length === 0 ? (
+            <div
+              style={{
+                gridColumn: "1 / -1",
+                background: "white",
+                borderRadius: "20px",
+                padding: "34px 20px",
+                textAlign: "center",
+                color: "#6b7280",
+                boxShadow: "0 10px 24px rgba(0,0,0,0.05)",
+                border: "1px solid #eef2f7",
+              }}
+            >
+              No dishes available
+            </div>
+          ) : (
+            filteredFoods.map((food) => (
+              <FoodCard
+                key={food._id}
+                food={food}
+                cart={cart}
+                addToCart={addToCart}
+                removeFromCart={removeFromCart}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div
       style={{
@@ -149,286 +601,15 @@ function App() {
       <Navbar
         cartCount={cart.reduce((total, item) => total + item.qty, 0)}
         setShowLogin={setShowLogin}
+        deliveryAddress={deliveryAddress}
+        setDeliveryAddress={updateDeliveryAddress}
       />
 
       {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
 
       <Routes>
-        <Route
-          path="/"
-          element={
-            <div>
-              <div
-                style={{
-                  maxWidth: "1260px",
-                  margin: "32px auto 0",
-                  padding: "0 20px",
-                }}
-              >
-                <div
-                  style={{
-                    position: "relative",
-                    borderRadius: "28px",
-                    overflow: "hidden",
-                    boxShadow: "0 18px 45px rgba(0,0,0,0.10)",
-                    background: "white",
-                  }}
-                >
-                  <img
-                    src={hero}
-                    alt="Hero"
-                    style={{
-                      width: "100%",
-                      height: "380px",
-                      objectFit: "cover",
-                      display: "block",
-                    }}
-                  />
-
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background:
-                        "linear-gradient(90deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.05) 100%)",
-                    }}
-                  />
-
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: "40px",
-                      bottom: "38px",
-                      color: "white",
-                      maxWidth: "520px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "inline-block",
-                        background: "rgba(255,255,255,0.18)",
-                        backdropFilter: "blur(8px)",
-                        padding: "8px 14px",
-                        borderRadius: "999px",
-                        fontSize: "13px",
-                        fontWeight: "700",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      Fresh food. Fast delivery. Better experience.
-                    </div>
-
-                    <h1
-                      style={{
-                        margin: "0 0 12px",
-                        fontSize: "42px",
-                        lineHeight: "1.1",
-                        fontWeight: "800",
-                      }}
-                    >
-                      Discover your next favorite meal
-                    </h1>
-
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "16px",
-                        lineHeight: "1.6",
-                        color: "rgba(255,255,255,0.92)",
-                      }}
-                    >
-                      Explore premium dishes, add items instantly, and manage your
-                      cart with a smoother restaurant ordering experience.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  maxWidth: "1260px",
-                  margin: "28px auto 0",
-                  padding: "0 20px",
-                }}
-              >
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.75)",
-                    backdropFilter: "blur(8px)",
-                    border: "1px solid rgba(255,255,255,0.8)",
-                    borderRadius: "24px",
-                    boxShadow: "0 12px 30px rgba(0,0,0,0.06)",
-                    padding: "28px 24px",
-                  }}
-                >
-                  <div style={{ textAlign: "center" }}>
-                    <h2
-                      style={{
-                        margin: "0 0 8px",
-                        fontSize: "30px",
-                        color: "#111827",
-                        fontWeight: "800",
-                      }}
-                    >
-                      Explore Our Menu
-                    </h2>
-
-                    <p
-                      style={{
-                        margin: 0,
-                        color: "#6b7280",
-                        fontSize: "15px",
-                      }}
-                    >
-                      Search, filter, and add dishes instantly from the home page.
-                    </p>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      marginTop: "22px",
-                    }}
-                  >
-                    <input
-                      type="text"
-                      placeholder="Search pizza, burger, pasta..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      style={{
-                        width: "100%",
-                        maxWidth: "460px",
-                        padding: "15px 20px",
-                        borderRadius: "999px",
-                        border: "1px solid #e5e7eb",
-                        outline: "none",
-                        fontSize: "14px",
-                        background: "white",
-                        boxShadow: "0 6px 20px rgba(0,0,0,0.05)",
-                      }}
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "12px",
-                      marginTop: "22px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    {categories.map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => setCategory(cat)}
-                        style={{
-                          background: category === cat ? "#1B4332" : "white",
-                          color: category === cat ? "white" : "#374151",
-                          border:
-                            category === cat
-                              ? "1px solid #1B4332"
-                              : "1px solid #e5e7eb",
-                          padding: "11px 18px",
-                          borderRadius: "999px",
-                          cursor: "pointer",
-                          fontWeight: "700",
-                          fontSize: "14px",
-                          boxShadow:
-                            category === cat
-                              ? "0 10px 22px rgba(27,67,50,0.20)"
-                              : "0 6px 16px rgba(0,0,0,0.04)",
-                          transition: "all 0.2s ease",
-                        }}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  maxWidth: "1260px",
-                  margin: "28px auto 0",
-                  padding: "0 20px 48px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: "12px",
-                    marginBottom: "18px",
-                  }}
-                >
-                  <div>
-                    <h3
-                      style={{
-                        margin: "0 0 6px",
-                        color: "#111827",
-                        fontSize: "24px",
-                        fontWeight: "800",
-                      }}
-                    >
-                      Featured Dishes
-                    </h3>
-                    <p
-                      style={{
-                        margin: 0,
-                        color: "#6b7280",
-                        fontSize: "14px",
-                      }}
-                    >
-                      {filteredFoods.length} item
-                      {filteredFoods.length === 1 ? "" : "s"} found
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
-                    gap: "26px",
-                    alignItems: "stretch",
-                  }}
-                >
-                  {filteredFoods.length === 0 ? (
-                    <div
-                      style={{
-                        gridColumn: "1 / -1",
-                        background: "white",
-                        borderRadius: "20px",
-                        padding: "34px 20px",
-                        textAlign: "center",
-                        color: "#6b7280",
-                        boxShadow: "0 10px 24px rgba(0,0,0,0.05)",
-                        border: "1px solid #eef2f7",
-                      }}
-                    >
-                      No dishes available
-                    </div>
-                  ) : (
-                    filteredFoods.map((food) => (
-                      <FoodCard
-                        key={food._id}
-                        food={food}
-                        cart={cart}
-                        addToCart={addToCart}
-                        removeFromCart={removeFromCart}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          }
-        />
+        <Route path="/" element={LandingPage} />
+        <Route path="/menu" element={MenuPage} />
 
         <Route
           path="/cart"
@@ -446,12 +627,7 @@ function App() {
 
         <Route
           path="/admin"
-          element={
-            <Admin
-              foods={foods}
-              setFoods={setFoods}
-            />
-          }
+          element={<Admin foods={foods} setFoods={setFoods} />}
         />
       </Routes>
     </div>
