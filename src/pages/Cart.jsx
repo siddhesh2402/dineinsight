@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react"
 import hero from "../assets/hero-food.jpg"
 
-function Cart({ cart = [], addToCart, removeFromCart, checkout }) {
+function Cart({
+  cart = [],
+  addToCart,
+  removeFromCart,
+  checkout,
+  isLoggedIn,
+  setShowLogin,
+}) {
   const savedAddress = localStorage.getItem("deliveryAddress") || ""
   const savedUserName = localStorage.getItem("userName") || ""
 
@@ -26,6 +33,12 @@ function Cart({ cart = [], addToCart, removeFromCart, checkout }) {
   }, [cart])
 
   const handleCheckout = async () => {
+    if (!isLoggedIn) {
+      alert("Please login first to place your order")
+      setShowLogin(true)
+      return
+    }
+
     if (cart.length === 0) {
       alert("Your cart is empty")
       return
@@ -413,6 +426,20 @@ function Cart({ cart = [], addToCart, removeFromCart, checkout }) {
               </div>
             </div>
 
+            {!isLoggedIn && (
+              <p
+                style={{
+                  marginTop: "0",
+                  marginBottom: "14px",
+                  fontSize: "14px",
+                  color: "#b91c1c",
+                  fontWeight: "600",
+                }}
+              >
+                You must log in before placing an order.
+              </p>
+            )}
+
             <button
               onClick={handleCheckout}
               style={{
@@ -426,9 +453,10 @@ function Cart({ cart = [], addToCart, removeFromCart, checkout }) {
                 fontWeight: "800",
                 fontSize: "15px",
                 boxShadow: "0 12px 24px rgba(27,67,50,0.22)",
+                opacity: isLoggedIn ? 1 : 0.85,
               }}
             >
-              Place Order
+              {isLoggedIn ? "Place Order" : "Login to Place Order"}
             </button>
           </div>
         </div>

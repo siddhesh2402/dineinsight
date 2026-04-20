@@ -20,9 +20,15 @@ const getOrders = async (req, res) => {
 
 const createOrder = async (req, res) => {
   try {
-    const { customerName, email, phone, address, items } = req.body
+    const { customerName, phone, address, items } = req.body
 
-    if (!phone || !address || !items || !Array.isArray(items) || items.length === 0) {
+    if (
+      !phone ||
+      !address ||
+      !items ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
       return res.status(400).json({
         message: "Phone, address, and at least one item are required",
       })
@@ -43,8 +49,8 @@ const createOrder = async (req, res) => {
     )
 
     const order = await Order.create({
-      customerName: customerName || "Guest User",
-      email: (email || "").trim().toLowerCase(),
+      customerName: customerName || req.user.name || "User",
+      email: req.user.email,
       phone,
       address,
       items: normalizedItems,

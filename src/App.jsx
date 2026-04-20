@@ -27,7 +27,10 @@ function App() {
     localStorage.getItem("deliveryAddress") || ""
   )
 
+  const token = localStorage.getItem("token")
   const userEmail = localStorage.getItem("userEmail")
+  const userRole = localStorage.getItem("role")
+  const isLoggedIn = !!token
 
   useEffect(() => {
     const fetchFoods = async () => {
@@ -96,12 +99,18 @@ function App() {
   }
 
   const checkout = async (orderDetails) => {
+    if (!isLoggedIn) {
+      alert("Please login first to place your order")
+      setShowLogin(true)
+      return
+    }
+
     if (cart.length === 0) return
 
     try {
       const payload = {
-        customerName: orderDetails.customerName || "Guest User",
-        email: userEmail || "",
+        customerName:
+          orderDetails.customerName || localStorage.getItem("userName") || "User",
         phone: orderDetails.phone,
         address:
           orderDetails.address || deliveryAddress || "Address not provided",
@@ -112,6 +121,7 @@ function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       })
@@ -591,55 +601,55 @@ function App() {
   )
 
   return (
-  <div
-    style={{
-      background:
-        "linear-gradient(180deg, #f8fafc 0%, #f3f4f6 35%, #f9fafb 100%)",
-      minHeight: "100vh",
-      fontFamily: "Arial, sans-serif",
-    }}
-  >
-    <Navbar
-      cartCount={cart.reduce((total, item) => total + item.qty, 0)}
-      setShowLogin={setShowLogin}
-      deliveryAddress={deliveryAddress}
-      setDeliveryAddress={updateDeliveryAddress}
-    />
-
-    {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
-
-    <Routes>
-      <Route
-        path="/"
-        element={
-          localStorage.getItem("role") === "admin" ? MenuPage : LandingPage
-        }
-      />
-      <Route path="/menu" element={MenuPage} />
-
-      <Route
-        path="/cart"
-        element={
-          <Cart
-            cart={cart}
-            addToCart={addToCart}
-            removeFromCart={removeFromCart}
-            checkout={checkout}
-          />
-        }
+    <div
+      style={{
+        background:
+          "linear-gradient(180deg, #f8fafc 0%, #f3f4f6 35%, #f9fafb 100%)",
+        minHeight: "100vh",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <Navbar
+        cartCount={cart.reduce((total, item) => total + item.qty, 0)}
+        setShowLogin={setShowLogin}
+        deliveryAddress={deliveryAddress}
+        setDeliveryAddress={updateDeliveryAddress}
       />
 
-      <Route path="/orders" element={<OrderHistory />} />
+      {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
 
-      <Route
-        path="/admin"
-        element={<Admin foods={foods} setFoods={setFoods} />}
-      />
-    </Routes>
+      <Routes>
+        <Route
+          path="/"
+          element={userRole === "admin" ? MenuPage : LandingPage}
+        />
+        <Route path="/menu" element={MenuPage} />
 
-    <Footer />
-  </div>
-)
+        <Route
+          path="/cart"
+          element={
+            <Cart
+              cart={cart}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+              checkout={checkout}
+              isLoggedIn={isLoggedIn}
+              setShowLogin={setShowLogin}
+            />
+          }
+        />
+
+        <Route path="/orders" element={<OrderHistory />} />
+
+        <Route
+          path="/admin"
+          element={<Admin foods={foods} setFoods={setFoods} />}
+        />
+      </Routes>
+
+      <Footer />
+    </div>
+  )
 }
 
 export default App

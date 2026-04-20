@@ -8,6 +8,7 @@ function Navbar({ cartCount, setShowLogin, deliveryAddress, setDeliveryAddress }
   const isInitialLanding = location.pathname === "/" && !deliveryAddress
 
   const logout = () => {
+    localStorage.removeItem("token")
     localStorage.removeItem("role")
     localStorage.removeItem("userName")
     localStorage.removeItem("userEmail")

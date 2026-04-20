@@ -2,6 +2,8 @@ import { useState } from "react"
 import { FaEye, FaEyeSlash } from "react-icons/fa"
 
 function LoginPopup({ setShowLogin }) {
+  const API_URL = import.meta.env.VITE_API_URL
+
   const [mode, setMode] = useState("login")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -25,46 +27,45 @@ function LoginPopup({ setShowLogin }) {
     setMode(nextMode)
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setError("")
 
-    const adminEmail = "admin@dineinsight.com"
-    const adminPassword = "Admin@123"
+    try {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      })
 
-    if (email === adminEmail && password === adminPassword) {
-      localStorage.setItem("role", "admin")
-      localStorage.setItem("userName", "Admin")
-      localStorage.setItem("userEmail", adminEmail)
+      const data = await res.json()
 
-      alert("Admin login successful")
-      resetForm()
-      setShowLogin(false)
-      window.location.reload()
-      return
-    }
+      if (!res.ok) {
+        setError(data.message || "Login failed")
+        return
+      }
 
-    const users = JSON.parse(localStorage.getItem("users")) || []
-
-    const user = users.find(
-      (u) => u.email === email && u.password === password
-    )
-
-    if (user) {
-      localStorage.setItem("role", "user")
-      localStorage.setItem("userName", user.name)
-      localStorage.setItem("userEmail", user.email)
+      localStorage.setItem("token", data.token)
+      localStorage.setItem("role", data.user.role)
+      localStorage.setItem("userName", data.user.name)
+      localStorage.setItem("userEmail", data.user.email)
 
       alert("Login successful")
       resetForm()
       setShowLogin(false)
       window.location.reload()
-    } else {
-      setError("Invalid email or password")
+    } catch (error) {
+      console.error("Login error:", error)
+      setError("Something went wrong")
     }
   }
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault()
     setError("")
 
@@ -75,26 +76,39 @@ function LoginPopup({ setShowLogin }) {
       return
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || []
+    try {
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      })
 
-    const emailExists = users.some((u) => u.email === email)
+      const data = await res.json()
 
-    if (emailExists) {
-      setError("Email already registered")
-      return
+      if (!res.ok) {
+        setError(data.message || "Signup failed")
+        return
+      }
+
+      localStorage.setItem("token", data.token)
+      localStorage.setItem("role", data.user.role)
+      localStorage.setItem("userName", data.user.name)
+      localStorage.setItem("userEmail", data.user.email)
+
+      alert("Account created successfully")
+      resetForm()
+      setShowLogin(false)
+      window.location.reload()
+    } catch (error) {
+      console.error("Signup error:", error)
+      setError("Something went wrong")
     }
-
-    const newUser = {
-      name,
-      email,
-      password,
-    }
-
-    users.push(newUser)
-    localStorage.setItem("users", JSON.stringify(users))
-
-    alert("Account created successfully")
-    switchMode("login")
   }
 
   return (
@@ -140,27 +154,23 @@ function LoginPopup({ setShowLogin }) {
         <h2>{mode === "login" ? "Login" : "Sign Up"}</h2>
 
         {mode === "login" ? (
-          <form key="login-form" onSubmit={handleLogin} autoComplete="on">
+          <form onSubmit={handleLogin} autoComplete="on">
             <input
               type="email"
-              name="loginEmail"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="username"
               style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
             />
 
             <div style={{ position: "relative" }}>
               <input
                 type={showPassword ? "text" : "password"}
-                name="loginPassword"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete="current-password"
                 style={{ width: "100%", padding: "10px" }}
               />
 
@@ -195,38 +205,32 @@ function LoginPopup({ setShowLogin }) {
             </button>
           </form>
         ) : (
-          <form key="signup-form" onSubmit={handleSignup} autoComplete="off">
+          <form onSubmit={handleSignup} autoComplete="off">
             <input
               type="text"
-              name="signupName"
               placeholder="Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              autoComplete="name"
               style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
             />
 
             <input
               type="email"
-              name="signupEmail"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="email"
               style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
             />
 
             <div style={{ position: "relative" }}>
               <input
                 type={showPassword ? "text" : "password"}
-                name="signupPassword"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete="new-password"
                 style={{ width: "100%", padding: "10px" }}
               />
 
