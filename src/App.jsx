@@ -7,6 +7,7 @@ import Admin from "./pages/Admin"
 import hero from "./assets/hero-food.jpg"
 import LoginPopup from "./components/LoginPopup"
 import OrderHistory from "./pages/OrderHistory"
+import Footer from "./components/Footer"
 
 function App() {
   const API_URL = import.meta.env.VITE_API_URL
@@ -590,57 +591,55 @@ function App() {
   )
 
   return (
-    <div
-      style={{
-        background:
-          "linear-gradient(180deg, #f8fafc 0%, #f3f4f6 35%, #f9fafb 100%)",
-        minHeight: "100vh",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <Navbar
-        cartCount={cart.reduce((total, item) => total + item.qty, 0)}
-        setShowLogin={setShowLogin}
-        deliveryAddress={deliveryAddress}
-        setDeliveryAddress={updateDeliveryAddress}
+  <div
+    style={{
+      background:
+        "linear-gradient(180deg, #f8fafc 0%, #f3f4f6 35%, #f9fafb 100%)",
+      minHeight: "100vh",
+      fontFamily: "Arial, sans-serif",
+    }}
+  >
+    <Navbar
+      cartCount={cart.reduce((total, item) => total + item.qty, 0)}
+      setShowLogin={setShowLogin}
+      deliveryAddress={deliveryAddress}
+      setDeliveryAddress={updateDeliveryAddress}
+    />
+
+    {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
+
+    <Routes>
+      <Route
+        path="/"
+        element={
+          localStorage.getItem("role") === "admin" ? MenuPage : LandingPage
+        }
+      />
+      <Route path="/menu" element={MenuPage} />
+
+      <Route
+        path="/cart"
+        element={
+          <Cart
+            cart={cart}
+            addToCart={addToCart}
+            removeFromCart={removeFromCart}
+            checkout={checkout}
+          />
+        }
       />
 
-      {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
+      <Route path="/orders" element={<OrderHistory />} />
 
-      <Routes>
-  <Route
-    path="/"
-    element={
-      localStorage.getItem("role") === "admin" ? (
-        MenuPage
-      ) : (
-        LandingPage
-      )
-    }
-  />
-  <Route path="/menu" element={MenuPage} />
-
-  <Route
-    path="/cart"
-    element={
-      <Cart
-        cart={cart}
-        addToCart={addToCart}
-        removeFromCart={removeFromCart}
-        checkout={checkout}
+      <Route
+        path="/admin"
+        element={<Admin foods={foods} setFoods={setFoods} />}
       />
-    }
-  />
+    </Routes>
 
-  <Route path="/orders" element={<OrderHistory />} />
-
-  <Route
-    path="/admin"
-    element={<Admin foods={foods} setFoods={setFoods} />}
-  />
-</Routes>
-    </div>
-  )
+    <Footer />
+  </div>
+)
 }
 
 export default App
