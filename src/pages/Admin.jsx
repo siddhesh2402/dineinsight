@@ -59,7 +59,16 @@ function Admin({ foods = [], setFoods }) {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/orders`)
+      setError("")
+
+      const token = localStorage.getItem("token")
+
+      const res = await fetch(`${API_URL}/api/orders`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
       const data = await res.json().catch(() => [])
 
       if (!res.ok) {
@@ -69,12 +78,13 @@ function Admin({ foods = [], setFoods }) {
       setAllOrders(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error("Fetch orders error:", err)
+      setError(err.message || "Could not load orders")
+      setAllOrders([])
     }
   }
 
   useEffect(() => {
     if (API_URL) {
-      fetchFoods()
       fetchOrders()
     }
   }, [API_URL])
@@ -259,7 +269,8 @@ function Admin({ foods = [], setFoods }) {
       month: "short",
       day: "numeric",
     })
-    revenueByDate[dateKey] = (revenueByDate[dateKey] || 0) + (order.totalCost || 0)
+    revenueByDate[dateKey] =
+      (revenueByDate[dateKey] || 0) + (order.totalCost || 0)
   })
 
   const salesLineData = Object.keys(revenueByDate).map((date) => ({
@@ -288,10 +299,11 @@ function Admin({ foods = [], setFoods }) {
   const COLORS = ["#1B4332", "#1976d2", "#f59e0b", "#d62828", "#7c3aed", "#06b6d4"]
 
   const cardStyle = {
-    background: "white",
-    padding: "20px",
-    borderRadius: "16px",
-    boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
+    background: "rgba(255,255,255,0.98)",
+    padding: "22px",
+    borderRadius: "22px",
+    boxShadow: "0 14px 34px rgba(0,0,0,0.07)",
+    border: "1px solid #eef2f7",
   }
 
   const inputStyle = {
@@ -374,59 +386,195 @@ function Admin({ foods = [], setFoods }) {
   return (
     <div
       style={{
-        maxWidth: "1280px",
+        maxWidth: "1400px",
         margin: "0 auto",
-        padding: "32px 20px 50px",
+        padding: "clamp(20px, 4vw, 36px) clamp(14px, 3vw, 24px) 56px",
       }}
     >
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ margin: 0, fontSize: "34px", color: "#1f2937" }}>
-          Admin Dashboard
-        </h1>
-        <p style={{ marginTop: "8px", color: "#6b7280", fontSize: "15px" }}>
-          Manage dishes, track real-time orders, revenue, and menu analytics.
-        </p>
-      </div>
-
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-          gap: "18px",
           marginBottom: "28px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "16px",
+          flexWrap: "wrap",
         }}
       >
-        <div style={cardStyle}>
-          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>Menu Items</p>
-          <h2 style={{ margin: "10px 0 0", color: "#111827" }}>{foods.length}</h2>
+        <div>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "40px",
+              fontWeight: "800",
+              color: "#111827",
+              letterSpacing: "-0.5px",
+            }}
+          >
+            Admin Dashboard
+          </h1>
+          <p
+            style={{
+              marginTop: "10px",
+              color: "#6b7280",
+              fontSize: "15px",
+              lineHeight: "1.6",
+            }}
+          >
+            Manage dishes, track real-time orders, revenue, and menu analytics.
+          </p>
         </div>
 
-        <div style={cardStyle}>
-          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>Total Orders</p>
-          <h2 style={{ margin: "10px 0 0", color: "#111827" }}>{totalOrders}</h2>
-        </div>
-
-        <div style={cardStyle}>
-          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>Revenue</p>
-          <h2 style={{ margin: "10px 0 0", color: "#111827" }}>${totalRevenue}</h2>
-        </div>
-
-        <div style={cardStyle}>
-          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>Top Ordered Item</p>
-          <h2 style={{ margin: "10px 0 0", color: "#111827" }}>{topOrderedItem}</h2>
-        </div>
+        <button
+          onClick={() => {
+            fetchFoods()
+            fetchOrders()
+          }}
+          style={{
+            background: "linear-gradient(135deg, #1B4332 0%, #2d6a4f 100%)",
+            color: "white",
+            border: "none",
+            padding: "12px 20px",
+            borderRadius: "999px",
+            cursor: "pointer",
+            fontWeight: "700",
+            fontSize: "14px",
+            boxShadow: "0 10px 22px rgba(27,67,50,0.20)",
+          }}
+        >
+          Refresh Dashboard
+        </button>
       </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(340px,1fr))",
-          gap: "20px",
+          gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
+          gap: "18px",
           marginBottom: "30px",
         }}
       >
         <div style={cardStyle}>
-          <h3 style={{ marginTop: 0, color: "#111827" }}>Menu Categories</h3>
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              fontSize: "13px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.4px",
+            }}
+          >
+            Menu Items
+          </p>
+          <h2
+            style={{
+              margin: "12px 0 0",
+              color: "#111827",
+              fontSize: "34px",
+              fontWeight: "800",
+            }}
+          >
+            {foods.length}
+          </h2>
+        </div>
+
+        <div style={cardStyle}>
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              fontSize: "13px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.4px",
+            }}
+          >
+            Total Orders
+          </p>
+          <h2
+            style={{
+              margin: "12px 0 0",
+              color: "#111827",
+              fontSize: "34px",
+              fontWeight: "800",
+            }}
+          >
+            {totalOrders}
+          </h2>
+        </div>
+
+        <div style={cardStyle}>
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              fontSize: "13px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.4px",
+            }}
+          >
+            Revenue
+          </p>
+          <h2
+            style={{
+              margin: "12px 0 0",
+              color: "#111827",
+              fontSize: "34px",
+              fontWeight: "800",
+            }}
+          >
+            ${totalRevenue}
+          </h2>
+        </div>
+
+        <div style={cardStyle}>
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              fontSize: "13px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.4px",
+            }}
+          >
+            Top Ordered Item
+          </p>
+          <h2
+            style={{
+              margin: "12px 0 0",
+              color: "#111827",
+              fontSize: "24px",
+              fontWeight: "800",
+              lineHeight: "1.3",
+            }}
+          >
+            {topOrderedItem}
+          </h2>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit,minmax(360px,1fr))",
+          gap: "18px",
+          marginBottom: "32px",
+        }}
+      >
+        <div style={cardStyle}>
+          <h3
+            style={{
+              margin: "0 0 14px",
+              color: "#111827",
+              fontSize: "22px",
+              fontWeight: "800",
+            }}
+          >
+            Menu Categories
+          </h3>
           <div style={{ width: "100%", height: "280px" }}>
             <ResponsiveContainer>
               <PieChart>
@@ -449,7 +597,16 @@ function Admin({ foods = [], setFoods }) {
         </div>
 
         <div style={cardStyle}>
-          <h3 style={{ marginTop: 0, color: "#111827" }}>Dishes by Category</h3>
+          <h3
+            style={{
+              margin: "0 0 14px",
+              color: "#111827",
+              fontSize: "22px",
+              fontWeight: "800",
+            }}
+          >
+            Dishes by Category
+          </h3>
           <div style={{ width: "100%", height: "280px" }}>
             <ResponsiveContainer>
               <BarChart data={dishesBarData}>
@@ -465,7 +622,16 @@ function Admin({ foods = [], setFoods }) {
         </div>
 
         <div style={cardStyle}>
-          <h3 style={{ marginTop: 0, color: "#111827" }}>Orders by Status</h3>
+          <h3
+            style={{
+              margin: "0 0 14px",
+              color: "#111827",
+              fontSize: "22px",
+              fontWeight: "800",
+            }}
+          >
+            Orders by Status
+          </h3>
           <div style={{ width: "100%", height: "280px" }}>
             <ResponsiveContainer>
               <BarChart data={statusBarData}>
@@ -481,7 +647,16 @@ function Admin({ foods = [], setFoods }) {
         </div>
 
         <div style={cardStyle}>
-          <h3 style={{ marginTop: 0, color: "#111827" }}>Sales Chart</h3>
+          <h3
+            style={{
+              margin: "0 0 14px",
+              color: "#111827",
+              fontSize: "22px",
+              fontWeight: "800",
+            }}
+          >
+            Sales Chart
+          </h3>
           <div style={{ width: "100%", height: "280px" }}>
             <ResponsiveContainer>
               <LineChart data={salesLineData}>
@@ -502,7 +677,16 @@ function Admin({ foods = [], setFoods }) {
         </div>
 
         <div style={{ ...cardStyle, gridColumn: "1 / -1" }}>
-          <h3 style={{ marginTop: 0, color: "#111827" }}>Most Ordered Items</h3>
+          <h3
+            style={{
+              margin: "0 0 14px",
+              color: "#111827",
+              fontSize: "22px",
+              fontWeight: "800",
+            }}
+          >
+            Most Ordered Items
+          </h3>
           <div style={{ width: "100%", height: "320px" }}>
             <ResponsiveContainer>
               <BarChart data={mostOrderedItemsData}>
@@ -518,7 +702,7 @@ function Admin({ foods = [], setFoods }) {
         </div>
       </div>
 
-      <div style={{ ...cardStyle, marginBottom: "30px" }}>
+      <div style={{ ...cardStyle, marginBottom: "32px" }}>
         <div
           style={{
             display: "flex",
@@ -530,7 +714,14 @@ function Admin({ foods = [], setFoods }) {
           }}
         >
           <div>
-            <h2 style={{ margin: 0, color: "#111827" }}>
+            <h2
+              style={{
+                margin: 0,
+                color: "#111827",
+                fontSize: "28px",
+                fontWeight: "800",
+              }}
+            >
               {editingId ? "Edit Dish" : "Add New Dish"}
             </h2>
             <p style={{ margin: "6px 0 0", color: "#6b7280", fontSize: "14px" }}>
@@ -557,7 +748,7 @@ function Admin({ foods = [], setFoods }) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "2fr 2fr 1fr",
+            gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
             gap: "14px",
             marginBottom: "14px",
           }}
@@ -592,8 +783,8 @@ function Admin({ foods = [], setFoods }) {
           style={{
             display: "grid",
             gridTemplateColumns: editingId
-              ? "1fr 1fr 1fr 1fr"
-              : "1fr 1fr 1fr",
+              ? "repeat(auto-fit,minmax(180px,1fr))"
+              : "repeat(auto-fit,minmax(180px,1fr))",
             gap: "14px",
             alignItems: "stretch",
             marginBottom: "20px",
@@ -637,7 +828,7 @@ function Admin({ foods = [], setFoods }) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "320px 1fr",
+            gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
             gap: "20px",
             alignItems: "start",
           }}
@@ -687,7 +878,16 @@ function Admin({ foods = [], setFoods }) {
       </div>
 
       <div>
-        <h2 style={{ marginBottom: "16px", color: "#111827" }}>All Dishes</h2>
+        <h2
+          style={{
+            marginBottom: "18px",
+            color: "#111827",
+            fontSize: "30px",
+            fontWeight: "800",
+          }}
+        >
+          All Dishes
+        </h2>
 
         {foods.length === 0 ? (
           <div style={cardStyle}>
@@ -698,7 +898,7 @@ function Admin({ foods = [], setFoods }) {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit,minmax(270px,1fr))",
-              gap: "20px",
+              gap: "18px",
             }}
           >
             {foods.map((food) => {

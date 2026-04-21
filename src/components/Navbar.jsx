@@ -1,17 +1,22 @@
 import { Link, useLocation } from "react-router-dom"
+import { toast } from "react-hot-toast"
 
 function Navbar({ cartCount, setShowLogin, deliveryAddress, setDeliveryAddress }) {
   const user = localStorage.getItem("userName")
   const role = localStorage.getItem("role")
   const location = useLocation()
 
-  const isInitialLanding = location.pathname === "/" && !deliveryAddress
+  const isInitialLanding =
+    location.pathname === "/" && !deliveryAddress && role !== "admin"
+
+  const homeLink = role === "admin" ? "/admin" : "/"
 
   const logout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("role")
     localStorage.removeItem("userName")
     localStorage.removeItem("userEmail")
+    toast.success("Logged out successfully")
     window.location.href = "/"
   }
 
@@ -50,7 +55,7 @@ function Navbar({ cartCount, setShowLogin, deliveryAddress, setDeliveryAddress }
         }}
       >
         <Link
-          to="/"
+          to={homeLink}
           style={{
             textDecoration: "none",
             color: "#111827",

@@ -2,12 +2,10 @@ const Order = require("../models/Order")
 
 const getOrders = async (req, res) => {
   try {
-    const { email } = req.query
-
     let filter = {}
 
-    if (email && email.trim() !== "") {
-      filter.email = email.trim().toLowerCase()
+    if (req.user.role !== "admin") {
+      filter.email = req.user.email
     }
 
     const orders = await Order.find(filter).sort({ createdAt: -1 })
@@ -68,6 +66,12 @@ const createOrder = async (req, res) => {
 
 const updateOrderStatus = async (req, res) => {
   try {
+    if (req.user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ message: "Only admin can update order status" })
+    }
+
     const { status } = req.body
 
     const allowedStatuses = [

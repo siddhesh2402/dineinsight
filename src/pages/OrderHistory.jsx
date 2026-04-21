@@ -14,12 +14,14 @@ function OrderHistory() {
     try {
       setError("")
 
-      const endpoint =
-        role === "admin"
-          ? `${API_URL}/api/orders`
-          : `${API_URL}/api/orders?email=${encodeURIComponent(userEmail || "")}`
+      const token = localStorage.getItem("token")
 
-      const res = await fetch(endpoint)
+      const res = await fetch(`${API_URL}/api/orders`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
       const data = await res.json().catch(() => [])
 
       if (!res.ok) {
@@ -45,10 +47,13 @@ function OrderHistory() {
       setUpdatingId(orderId)
       setError("")
 
+      const token = localStorage.getItem("token")
+
       const res = await fetch(`${API_URL}/api/orders/${orderId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: newStatus }),
       })
@@ -120,30 +125,52 @@ function OrderHistory() {
       ? "View all orders, customer details, ordered items, and update delivery status."
       : "Track your orders and view the latest delivery status updates."
 
+  const cardStyle = {
+    background: "rgba(255,255,255,0.98)",
+    borderRadius: "24px",
+    padding: "24px",
+    boxShadow: "0 14px 34px rgba(0,0,0,0.07)",
+    border: "1px solid #eef2f7",
+  }
+
   if (role !== "admin" && !userEmail) {
     return (
       <div
         style={{
-          maxWidth: "900px",
+          maxWidth: "960px",
           margin: "0 auto",
-          padding: "32px 20px 48px",
+          padding: "clamp(20px, 4vw, 36px) clamp(14px, 3vw, 24px) 52px",
         }}
       >
         <div
           style={{
-            background: "white",
-            borderRadius: "24px",
-            padding: "34px 24px",
+            ...cardStyle,
             textAlign: "center",
-            boxShadow: "0 12px 28px rgba(0,0,0,0.06)",
-            border: "1px solid #eef2f7",
+            padding: "clamp(24px, 5vw, 42px) clamp(16px, 4vw, 28px)",
           }}
         >
+          <div
+            style={{
+              width: "62px",
+              height: "62px",
+              margin: "0 auto 16px",
+              borderRadius: "18px",
+              background: "#f3f4f6",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "28px",
+            }}
+          >
+            📦
+          </div>
+
           <h2
             style={{
               margin: "0 0 10px",
               color: "#111827",
               fontWeight: "800",
+              fontSize: "28px",
             }}
           >
             Sign in to view your orders
@@ -153,6 +180,7 @@ function OrderHistory() {
               margin: 0,
               color: "#6b7280",
               fontSize: "15px",
+              lineHeight: "1.6",
             }}
           >
             Please sign in to track your placed orders and delivery progress.
@@ -165,31 +193,61 @@ function OrderHistory() {
   return (
     <div
       style={{
-        maxWidth: "1260px",
+        maxWidth: "1360px",
         margin: "0 auto",
-        padding: "32px 20px 48px",
+        padding: "clamp(20px, 4vw, 36px) clamp(14px, 3vw, 24px) 56px",
       }}
     >
-      <div style={{ marginBottom: "24px" }}>
-        <h1
+      <div
+        style={{
+          marginBottom: "28px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "16px",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              margin: "0 0 8px",
+              fontSize: "clamp(28px, 5vw, 40px)",
+              fontWeight: "800",
+              color: "#111827",
+              letterSpacing: "-0.5px",
+            }}
+          >
+            {pageTitle}
+          </h1>
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              fontSize: "15px",
+              lineHeight: "1.6",
+            }}
+          >
+            {pageSubtitle}
+          </p>
+        </div>
+
+        <button
+          onClick={fetchOrders}
           style={{
-            margin: "0 0 8px",
-            fontSize: "34px",
-            fontWeight: "800",
-            color: "#111827",
+            background: "linear-gradient(135deg, #1B4332 0%, #2d6a4f 100%)",
+            color: "white",
+            border: "none",
+            padding: "12px 20px",
+            borderRadius: "999px",
+            cursor: "pointer",
+            fontWeight: "700",
+            fontSize: "14px",
+            boxShadow: "0 10px 22px rgba(27,67,50,0.20)",
           }}
         >
-          {pageTitle}
-        </h1>
-        <p
-          style={{
-            margin: 0,
-            color: "#6b7280",
-            fontSize: "15px",
-          }}
-        >
-          {pageSubtitle}
-        </p>
+          Refresh Orders
+        </button>
       </div>
 
       {error && (
@@ -198,7 +256,7 @@ function OrderHistory() {
             background: "#fee2e2",
             color: "#991b1b",
             padding: "12px 14px",
-            borderRadius: "12px",
+            borderRadius: "14px",
             marginBottom: "18px",
             fontSize: "14px",
             border: "1px solid #fecaca",
@@ -211,22 +269,57 @@ function OrderHistory() {
       {orders.length === 0 ? (
         <div
           style={{
-            background: "white",
-            borderRadius: "24px",
-            padding: "34px 24px",
+            ...cardStyle,
             textAlign: "center",
-            boxShadow: "0 12px 28px rgba(0,0,0,0.06)",
-            border: "1px solid #eef2f7",
             color: "#6b7280",
+            padding: "clamp(24px, 5vw, 42px) clamp(16px, 4vw, 28px)",
           }}
         >
-          {role === "admin" ? "No orders available." : "You have not placed any orders yet."}
+          <div
+            style={{
+              width: "62px",
+              height: "62px",
+              margin: "0 auto 16px",
+              borderRadius: "18px",
+              background: "#f3f4f6",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "28px",
+            }}
+          >
+            🧾
+          </div>
+
+          <h2
+            style={{
+              margin: "0 0 10px",
+              color: "#111827",
+              fontSize: "26px",
+              fontWeight: "800",
+            }}
+          >
+            {role === "admin" ? "No orders available" : "No orders yet"}
+          </h2>
+
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              fontSize: "15px",
+              lineHeight: "1.6",
+            }}
+          >
+            {role === "admin"
+              ? "Orders will appear here once customers start placing them."
+              : "You have not placed any orders yet."}
+          </p>
         </div>
       ) : (
         <div
           style={{
             display: "grid",
-            gap: "22px",
+            gap: "24px",
           }}
         >
           {orders.map((order) => {
@@ -237,11 +330,8 @@ function OrderHistory() {
               <div
                 key={order._id}
                 style={{
-                  background: "rgba(255,255,255,0.97)",
-                  borderRadius: "24px",
-                  padding: "22px",
-                  boxShadow: "0 12px 28px rgba(0,0,0,0.06)",
-                  border: "1px solid #eef2f7",
+                  ...cardStyle,
+                  padding: "24px",
                 }}
               >
                 <div
@@ -249,25 +339,25 @@ function OrderHistory() {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "start",
-                    gap: "16px",
+                    gap: "18px",
                     flexWrap: "wrap",
-                    marginBottom: "18px",
+                    marginBottom: "20px",
                   }}
                 >
-                  <div>
+                  <div style={{ flex: "1 1 420px" }}>
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
                         gap: "10px",
                         flexWrap: "wrap",
-                        marginBottom: "10px",
+                        marginBottom: "12px",
                       }}
                     >
                       <h2
                         style={{
                           margin: 0,
-                          fontSize: "24px",
+                          fontSize: role === "admin" ? "28px" : "24px",
                           color: "#111827",
                           fontWeight: "800",
                         }}
@@ -296,6 +386,7 @@ function OrderHistory() {
                         gap: "8px",
                         color: "#4b5563",
                         fontSize: "14px",
+                        lineHeight: "1.6",
                       }}
                     >
                       {role === "admin" && (
@@ -326,16 +417,17 @@ function OrderHistory() {
                     style={{
                       background: "#f9fafb",
                       border: "1px solid #e5e7eb",
-                      borderRadius: "18px",
-                      padding: "16px",
+                      borderRadius: "20px",
+                      padding: "18px",
                       minWidth: "260px",
+                      flex: "1 1 300px",
                     }}
                   >
                     <p
                       style={{
-                        margin: "0 0 10px",
+                        margin: "0 0 12px",
                         color: "#6b7280",
-                        fontSize: "13px",
+                        fontSize: "12px",
                         fontWeight: "700",
                         textTransform: "uppercase",
                         letterSpacing: "0.5px",
@@ -347,7 +439,7 @@ function OrderHistory() {
                     <div
                       style={{
                         display: "grid",
-                        gap: "10px",
+                        gap: "12px",
                         color: "#374151",
                         fontSize: "14px",
                       }}
@@ -374,7 +466,7 @@ function OrderHistory() {
                     </div>
 
                     {role === "admin" ? (
-                      <div style={{ marginTop: "16px" }}>
+                      <div style={{ marginTop: "18px" }}>
                         <label
                           style={{
                             display: "block",
@@ -399,7 +491,9 @@ function OrderHistory() {
                             background: "white",
                             fontSize: "14px",
                             outline: "none",
-                            cursor: "pointer",
+                            cursor:
+                              updatingId === order._id ? "not-allowed" : "pointer",
+                            opacity: updatingId === order._id ? 0.8 : 1,
                           }}
                         >
                           <option>Placed</option>
@@ -409,7 +503,7 @@ function OrderHistory() {
                         </select>
                       </div>
                     ) : (
-                      <div style={{ marginTop: "16px" }}>
+                      <div style={{ marginTop: "18px" }}>
                         <p
                           style={{
                             margin: "0 0 10px",
@@ -465,9 +559,9 @@ function OrderHistory() {
                 <div>
                   <h3
                     style={{
-                      margin: "0 0 14px",
+                      margin: "0 0 16px",
                       color: "#111827",
-                      fontSize: "18px",
+                      fontSize: "20px",
                       fontWeight: "800",
                     }}
                   >
@@ -477,8 +571,8 @@ function OrderHistory() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
-                      gap: "16px",
+                      gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
+                      gap: "14px",
                     }}
                   >
                     {(order.items || []).map((item, index) => {
@@ -492,10 +586,10 @@ function OrderHistory() {
                           key={index}
                           style={{
                             border: "1px solid #e5e7eb",
-                            borderRadius: "18px",
-                            padding: "12px",
+                            borderRadius: "20px",
+                            padding: "14px",
                             display: "grid",
-                            gridTemplateColumns: "90px 1fr",
+                            gridTemplateColumns: "80px 1fr",
                             gap: "12px",
                             alignItems: "center",
                             background: "#fcfcfd",
@@ -505,8 +599,8 @@ function OrderHistory() {
                             src={itemImage}
                             alt={item.name}
                             style={{
-                              width: "90px",
-                              height: "90px",
+                              width: "80px",
+                              height: "80px",
                               objectFit: "cover",
                               borderRadius: "14px",
                             }}
@@ -517,7 +611,7 @@ function OrderHistory() {
                               style={{
                                 margin: "0 0 6px",
                                 color: "#111827",
-                                fontSize: "16px",
+                                fontSize: "17px",
                                 fontWeight: "800",
                               }}
                             >

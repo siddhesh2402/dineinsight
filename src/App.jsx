@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react"
 import Navbar from "./components/Navbar"
 import FoodCard from "./components/FoodCard"
-import { Routes, Route, useNavigate } from "react-router-dom"
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom"
 import Cart from "./pages/Cart"
 import Admin from "./pages/Admin"
 import hero from "./assets/hero-food.jpg"
 import LoginPopup from "./components/LoginPopup"
 import OrderHistory from "./pages/OrderHistory"
 import Footer from "./components/Footer"
+import { Toaster, toast } from "react-hot-toast"
 
 function App() {
   const API_URL = import.meta.env.VITE_API_URL
@@ -31,6 +32,7 @@ function App() {
   const userEmail = localStorage.getItem("userEmail")
   const userRole = localStorage.getItem("role")
   const isLoggedIn = !!token
+  const isAdmin = userRole === "admin"
 
   useEffect(() => {
     const fetchFoods = async () => {
@@ -46,6 +48,7 @@ function App() {
       } catch (err) {
         console.error("Error fetching foods:", err)
         setFoods([])
+        toast.error("Could not load menu items")
       }
     }
 
@@ -73,20 +76,22 @@ function App() {
   }
 
   const addToCart = (food) => {
-    const existingItem = cart.find((item) => item._id === food._id)
+  const existingItem = cart.find((item) => item._id === food._id)
 
-    let updatedCart
+  let updatedCart
 
-    if (existingItem) {
-      updatedCart = cart.map((item) =>
-        item._id === food._id ? { ...item, qty: item.qty + 1 } : item
-      )
-    } else {
-      updatedCart = [...cart, { ...food, qty: 1 }]
-    }
-
-    saveCart(updatedCart)
+  if (existingItem) {
+    updatedCart = cart.map((item) =>
+      item._id === food._id ? { ...item, qty: item.qty + 1 } : item
+    )
+    toast.success(`Added another ${food.name}`)
+  } else {
+    updatedCart = [...cart, { ...food, qty: 1 }]
+    toast.success(`${food.name} added to cart`)
   }
+
+  saveCart(updatedCart)
+}
 
   const removeFromCart = (foodId) => {
     const updatedCart = cart
@@ -100,12 +105,14 @@ function App() {
 
   const checkout = async (orderDetails) => {
     if (!isLoggedIn) {
-      alert("Please login first to place your order")
+      toast.error("Please login first to place your order")
       setShowLogin(true)
       return
     }
 
     if (cart.length === 0) return
+
+    const loadingToast = toast.loading("Placing your order...")
 
     try {
       const payload = {
@@ -139,10 +146,12 @@ function App() {
         localStorage.setItem("cart_" + userEmail, JSON.stringify([]))
       }
 
-      alert("Order placed successfully!")
+      toast.dismiss(loadingToast)
+      toast.success("Order placed successfully!")
     } catch (err) {
       console.error("Checkout error:", err)
-      alert(err.message || "Could not place order")
+      toast.dismiss(loadingToast)
+      toast.error(err.message || "Could not place order")
     }
   }
 
@@ -159,7 +168,7 @@ function App() {
 
   const handleAddressContinue = () => {
     if (!addressInput.trim()) {
-      alert("Please enter your delivery address")
+      toast.error("Please enter your delivery address")
       return
     }
 
@@ -177,6 +186,33 @@ function App() {
     localStorage.setItem("deliveryAddress", cleanedAddress)
     setDeliveryAddress(cleanedAddress)
     setAddressInput(cleanedAddress)
+  }
+
+  const RequireAuth = ({ children }) => {
+    if (!isLoggedIn) {
+      if (!showLogin) {
+        setShowLogin(true)
+      }
+      return <Navigate to="/" replace />
+    }
+
+    return children
+  }
+
+  const RequireAdmin = ({ children }) => {
+    if (!isLoggedIn) {
+      if (!showLogin) {
+        setShowLogin(true)
+      }
+      return <Navigate to="/" replace />
+    }
+
+    if (!isAdmin) {
+      toast.error("You are not authorized to access admin page")
+      return <Navigate to="/menu" replace />
+    }
+
+    return children
   }
 
   const LandingPage = (
@@ -574,15 +610,51 @@ function App() {
               style={{
                 gridColumn: "1 / -1",
                 background: "white",
-                borderRadius: "20px",
-                padding: "34px 20px",
+                borderRadius: "24px",
+                padding: "42px 20px",
                 textAlign: "center",
                 color: "#6b7280",
                 boxShadow: "0 10px 24px rgba(0,0,0,0.05)",
                 border: "1px solid #eef2f7",
               }}
             >
-              No dishes available
+              <div
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  margin: "0 auto 14px",
+                  borderRadius: "18px",
+                  background: "#f3f4f6",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "28px",
+                }}
+              >
+                🍽️
+              </div>
+
+              <h3
+                style={{
+                  margin: "0 0 8px",
+                  color: "#111827",
+                  fontSize: "22px",
+                  fontWeight: "800",
+                }}
+              >
+                No dishes available
+              </h3>
+
+              <p
+                style={{
+                  margin: 0,
+                  color: "#6b7280",
+                  fontSize: "15px",
+                  lineHeight: "1.6",
+                }}
+              >
+                Try changing the category or search term to explore more items.
+              </p>
             </div>
           ) : (
             filteredFoods.map((food) => (
@@ -616,12 +688,14 @@ function App() {
         setDeliveryAddress={updateDeliveryAddress}
       />
 
+      <Toaster position="top-center" reverseOrder={false} />
+
       {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
 
       <Routes>
         <Route
           path="/"
-          element={userRole === "admin" ? MenuPage : LandingPage}
+          element={isAdmin ? <Navigate to="/admin" replace /> : LandingPage}
         />
         <Route path="/menu" element={MenuPage} />
 
@@ -639,11 +713,22 @@ function App() {
           }
         />
 
-        <Route path="/orders" element={<OrderHistory />} />
+        <Route
+          path="/orders"
+          element={
+            <RequireAuth>
+              <OrderHistory />
+            </RequireAuth>
+          }
+        />
 
         <Route
           path="/admin"
-          element={<Admin foods={foods} setFoods={setFoods} />}
+          element={
+            <RequireAdmin>
+              <Admin foods={foods} setFoods={setFoods} />
+            </RequireAdmin>
+          }
         />
       </Routes>
 

@@ -9,8 +9,8 @@ const {
 
 const authMiddleware = require("../middleware/authMiddleware")
 
-router.get("/", getOrders)
+router.get("/", authMiddleware, getOrders)
 router.post("/", authMiddleware, createOrder)
-router.put("/:id", updateOrderStatus)
+router.put("/:id", authMiddleware, updateOrderStatus)
 
 module.exports = router
